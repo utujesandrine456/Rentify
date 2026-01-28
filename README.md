@@ -1,24 +1,25 @@
-Rentify
+🚀 Rentify
 
 Rentify is a mobile rental management application built with React Native and Spring Boot that helps landlords and tenants build trust through transparent rent payment tracking and verified tenant history.
 
-Problem Statement
+📌 Problem Statement
 
-Many landlords lose money due to tenants leaving without paying rent, while honest tenants lack a trusted way to prove their payment history. Rentify solves this by creating a secure, shared rental record system.
+Many landlords lose money when tenants leave without paying rent, while honest tenants have no trusted way to prove their payment history.
+This creates mistrust and financial loss on both sides.
 
-Solution
+💡 Solution
 
-Rentify provides a digital platform where:
+Rentify provides a secure digital platform where:
 
-Tenants record rent payments (Mobile Money or landlord-confirmed cash)
+Tenants record rent payments (Mobile Money or confirmed cash)
 
 Landlords confirm payments and manage properties
 
 Payment history builds a trusted tenant profile
 
-Unpaid rent can be flagged to prevent repeat fraud
+Unpaid rent can be flagged to reduce repeat fraud
 
-Key Features
+✨ Key Features
 
 Tenant & Landlord accounts
 
@@ -32,9 +33,9 @@ Tenant payment history
 
 Secure authentication
 
-Clean and simple UI
+Clean, minimal UI
 
-Tech Stack
+🛠 Tech Stack
 
 Mobile App: React Native (Expo)
 
@@ -46,11 +47,11 @@ Authentication: JWT
 
 Payments: Mobile Money (planned)
 
-Project Structure
-/Frontend   → React Native mobile app
-/Backend    → Spring Boot REST API
+📁 Project Structure
+/Frontend   # React Native mobile app
+/Backend    # Spring Boot REST API
 
-Installation
+▶️ Installation
 Frontend
 npm install
 npx expo start
@@ -58,16 +59,16 @@ npx expo start
 Backend
 mvn spring-boot:run
 
-Future Improvements
+🔮 Future Improvements
 
 Automated Mobile Money verification
 
-Tenant credit scoring
+Tenant trust score system
 
 Admin dashboard
 
 Property listing marketplace
 
-Contributors
+👥 Contributors
 
-Developed by the Rentify Team 🚀
+Developed by the Rentify Team 💙
