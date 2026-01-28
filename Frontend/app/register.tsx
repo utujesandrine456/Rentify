@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
@@ -11,6 +12,7 @@ export default function Register() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const insets = useSafeAreaInsets();
+    const { t } = useLanguage();
     const [role, setRole] = useState<'tenant' | 'landlord'>(params.role === 'landlord' ? 'landlord' : 'tenant');
     const [step, setStep] = useState(1);
     const [phone, setPhone] = useState('');
@@ -61,10 +63,12 @@ export default function Register() {
                             style={styles.logo}
                             resizeMode="contain"
                         />
-                        <Text style={styles.heroTitle}>{step === 1 ? 'Join Rentify' : 'Verify Phone'}</Text>
+                        <Text style={styles.heroTitle}>
+                            {step === 1 ? t('signup_title') : 'Verify Phone'}
+                        </Text>
                         <Text style={styles.heroSubtitle}>
                             {step === 1
-                                ? 'Create your account to start managing your assets.'
+                                ? t('signup_subtitle')
                                 : `Enter the code sent to ${phone}`
                             }
                         </Text>
@@ -78,18 +82,18 @@ export default function Register() {
                                 style={[styles.roleButton, role === 'tenant' && styles.activeRole]}
                                 onPress={() => setRole('tenant')}
                             >
-                                <Text style={[styles.roleText, role === 'tenant' && styles.activeRoleText]}>Tenant</Text>
+                                <Text style={[styles.roleText, role === 'tenant' && styles.activeRoleText]}>{t('tenant_dashboard')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.roleButton, role === 'landlord' && styles.activeRole]}
                                 onPress={() => setRole('landlord')}
                             >
-                                <Text style={[styles.roleText, role === 'landlord' && styles.activeRoleText]}>Landlord</Text>
+                                <Text style={[styles.roleText, role === 'landlord' && styles.activeRoleText]}>{t('landlord_dashboard')}</Text>
                             </TouchableOpacity>
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Phone Number</Text>
+                            <Text style={styles.label}>{t('phone_prompt')}</Text>
                             <TextInput
                                 style={styles.input}
                                 placeholder="+250 7..."
@@ -101,7 +105,7 @@ export default function Register() {
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Password</Text>
+                            <Text style={styles.label}>{t('password_label')}</Text>
                             <TextInput
                                 style={styles.input}
                                 placeholder="••••••••"
@@ -121,8 +125,8 @@ export default function Register() {
                             <Ionicons name="arrow-forward" size={18} color="#FFF" />
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/login')}>
-                            <Text style={styles.linkText}>Already a member? <Text style={styles.linkHighlight}>Login</Text></Text>
+                        <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/login' as any)}>
+                            <Text style={styles.linkText}>{t('already_account')} <Text style={styles.linkHighlight}>{t('login_link')}</Text></Text>
                         </TouchableOpacity>
                     </Animated.View>
                 ) : (

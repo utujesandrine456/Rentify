@@ -1,13 +1,14 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions, Platform } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withRepeat, withTiming, withSequence } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function Hero() {
     const router = useRouter();
     const { height } = useWindowDimensions();
+    const { t } = useLanguage();
 
     const scrollAnim = useSharedValue(0);
 
@@ -45,38 +46,37 @@ export default function Hero() {
                 style={styles.content}
             >
                 <Text style={styles.title}>
-                    REDEFINING{'\n'}
-                    <Text style={styles.hollowText}>URBAN</Text>{'\n'}
-                    LIVING.
+                    {t('hero_title').toUpperCase()}
                 </Text>
 
                 <Text style={styles.description}>
-                    A minimalist ecosystem for seamless rent management,
-                    transaction tracking, and landlord-tenant harmony.
+                    {t('hero_subtitle')}
                 </Text>
 
                 <View style={styles.buttonStack}>
                     <View style={styles.buttonRow}>
                         <TouchableOpacity
                             style={styles.mainBtn}
-                            onPress={() => router.push('/terms')}
+                            onPress={() => router.push('/terms' as any)}
                         >
-                            <Text style={styles.mainBtnText}>GET STARTED</Text>
+                            <Text style={styles.mainBtnText}>{t('get_started').toUpperCase()}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
                             style={styles.outlineBtn}
                             onPress={() => { }}
                         >
-                            <Text style={styles.outlineBtnText}>VIEW DEMO</Text>
+                            <Text style={styles.outlineBtnText}>{t('learn_more').toUpperCase()}</Text>
                         </TouchableOpacity>
                     </View>
 
                     <TouchableOpacity
                         style={styles.loginBtnHero}
-                        onPress={() => router.push('/login')}
+                        onPress={() => router.push('/login' as any)}
                     >
-                        <Text style={styles.loginBtnHeroText}>ALREADY HAVE AN ACCOUNT? LOGIN</Text>
+                        <Text style={styles.loginBtnHeroText}>
+                            {t('already_account').toUpperCase()} {t('login_link').toUpperCase()}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </Animated.View>
@@ -139,9 +139,8 @@ const styles = StyleSheet.create({
     },
     title: {
         fontFamily: 'PlusJakartaSans_800ExtraBold',
-        fontSize: 48,
+        fontSize: 36,
         color: '#FFF',
-        lineHeight: 64,
         marginBottom: 32,
     },
     hollowText: {
@@ -172,6 +171,7 @@ const styles = StyleSheet.create({
         fontFamily: 'PlusJakartaSans_800ExtraBold',
         fontSize: 14,
         color: '#000',
+        textAlign: 'center'
     },
     outlineBtn: {
         borderWidth: 1,

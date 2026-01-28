@@ -1,23 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, FlatList, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import TopBar from '../../components/topbar';
-
-const { width } = Dimensions.get('window');
-
-const CATEGORIES = [
-    { id: 'houses', label: 'Houses', icon: 'home-outline' },
-    { id: 'cars', label: 'Cars', icon: 'car-outline' },
-];
-
-const PRICE_RANGES = [
-    { id: 'all', label: 'All Prices' },
-    { id: 'low', label: 'Under 100k' },
-    { id: 'mid', label: '100k - 500k' },
-    { id: 'high', label: '500k+' },
-];
+import { useLanguage } from '../../context/LanguageContext';
 
 const MOCK_DATA = [
     {
@@ -25,7 +12,7 @@ const MOCK_DATA = [
         type: 'houses',
         title: 'Modern Villa',
         location: 'Kigali, Nyarutarama',
-        price: '450,000',
+        price: 450000,
         image: require('../../assets/images/RentifyLanding.jpg'),
         rating: '4.8',
     },
@@ -34,25 +21,16 @@ const MOCK_DATA = [
         type: 'houses',
         title: 'Cozy Apartment',
         location: 'Kigali, Kacyiru',
-        price: '150,000',
+        price: 150000,
         image: require('../../assets/images/RentifyLanding.jpg'),
         rating: '4.5',
-    },
-    {
-        id: '3',
-        type: 'cars',
-        title: 'Toyota RAV4',
-        location: 'Kigali, Gikondo',
-        price: '50,000 / day',
-        image: require('../../assets/images/RentifyLanding.jpg'),
-        rating: '4.9',
     },
     {
         id: '4',
         type: 'houses',
         title: 'Luxury Penthouse',
         location: 'Kigali, Kimihurura',
-        price: '850,000',
+        price: 850000,
         image: require('../../assets/images/RentifyLanding.jpg'),
         rating: '5.0',
     },
@@ -60,22 +38,43 @@ const MOCK_DATA = [
 
 export default function Explore() {
     const router = useRouter();
+    const { t } = useLanguage();
+
+    const [searchText, setSearchText] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeCategory, setActiveCategory] = useState('houses');
     const [activePriceRange, setActivePriceRange] = useState('all');
 
+    const PRICE_RANGES = [
+        { id: 'all', label: t('all_prices') },
+        { id: 'low', label: t('under_100k') },
+        { id: 'mid', label: t('mid_range') },
+        { id: 'high', label: t('high_range') },
+    ];
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setSearchQuery(searchText);
+        }, 300);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [searchText]);
+
     const filteredData = MOCK_DATA.filter(item => {
-        const matchesType = item.type === activeCategory;
         const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             item.location.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesType && matchesSearch;
+
+        let matchesPrice = true;
+        if (activePriceRange === 'low') matchesPrice = item.price < 100000;
+        else if (activePriceRange === 'mid') matchesPrice = item.price >= 100000 && item.price <= 500000;
+        else if (activePriceRange === 'high') matchesPrice = item.price > 500000;
+
+        return matchesSearch && matchesPrice;
     });
 
-    const renderItem = ({ item, index }: { item: typeof MOCK_DATA[0], index: number }) => (
-        <Animated.View
-            entering={FadeInDown.delay(index * 100).duration(800)}
-            style={styles.card}
-        >
+    const renderItem = ({ item }: { item: typeof MOCK_DATA[0] }) => (
+        <View style={styles.card}>
             <TouchableOpacity
                 activeOpacity={0.9}
                 onPress={() => router.push({ pathname: '/tenant/explore/[id]', params: { id: item.id } } as any)}
@@ -94,72 +93,60 @@ export default function Explore() {
                         <Text style={styles.cardLocation}>{item.location}</Text>
                     </View>
                     <View style={styles.priceRow}>
-                        <Text style={styles.priceLabel}>Price</Text>
-                        <Text style={styles.priceValue}>RWF {item.price}</Text>
+                        <Text style={styles.priceLabel}>{t('price')}</Text>
+                        <Text style={styles.priceValue}>
+                            RWF {item.price.toLocaleString()}
+                            {item.type === 'cars' ? ' / day' : ''}
+                        </Text>
                     </View>
                 </View>
             </TouchableOpacity>
-        </Animated.View>
+        </View>
     );
 
     return (
         <View style={styles.container}>
             <TopBar
-                title="Explore"
+                title={t('explore')}
                 onNotificationPress={() => router.push('/notifications')}
             />
 
-            <View style={styles.searchSection}>
-                <View style={styles.searchBar}>
-                    <Ionicons name="search-outline" size={20} color="#888" />
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder={`Search ${activeCategory}...`}
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                        placeholderTextColor="#999"
-                    />
-                </View>
-            </View>
-
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.categoriesScroll}
-                contentContainerStyle={styles.categoriesContent}
-            >
-                {CATEGORIES.map((cat) => (
-                    <TouchableOpacity
-                        key={cat.id}
-                        style={[styles.categoryBtn, activeCategory === cat.id && styles.activeCategoryBtn]}
-                        onPress={() => setActiveCategory(cat.id)}
-                    >
-                        <Ionicons
-                            name={cat.icon as any}
-                            size={18}
-                            color={activeCategory === cat.id ? '#FFF' : '#000'}
+            {/* Fixed Header Section */}
+            <View style={styles.headerContainer}>
+                <View style={styles.searchSection}>
+                    <View style={styles.searchBar}>
+                        <Ionicons name="search-outline" size={20} color="#666" />
+                        <TextInput
+                            style={styles.searchInput}
+                            placeholder={`${t('search')} properties...`}
+                            value={searchText}
+                            onChangeText={setSearchText}
+                            placeholderTextColor="#999"
                         />
-                        <Text style={[styles.categoryText, activeCategory === cat.id && styles.activeCategoryText]}>
-                            {cat.label}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
+                        {searchText.length > 0 && (
+                            <TouchableOpacity onPress={() => setSearchText('')}>
+                                <Ionicons name="close-circle" size={20} color="#CCC" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </View>
 
-            <View style={styles.filterSection}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersContent}>
-                    {PRICE_RANGES.map((range) => (
-                        <TouchableOpacity
-                            key={range.id}
-                            style={[styles.filterChip, activePriceRange === range.id && styles.activeFilterChip]}
-                            onPress={() => setActivePriceRange(range.id)}
-                        >
-                            <Text style={[styles.filterText, activePriceRange === range.id && styles.activeFilterText]}>
-                                {range.label}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
+                <View style={styles.filterSection}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersContent}>
+                        {PRICE_RANGES.map((range, index) => (
+                            <Animated.View key={range.id} entering={FadeInRight.delay(index * 100).duration(400)}>
+                                <TouchableOpacity
+                                    style={[styles.filterChip, activePriceRange === range.id && styles.activeFilterChip]}
+                                    onPress={() => setActivePriceRange(range.id)}
+                                >
+                                    <Text style={[styles.filterText, activePriceRange === range.id && styles.activeFilterText]}>
+                                        {range.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            </Animated.View>
+                        ))}
+                    </ScrollView>
+                </View>
             </View>
 
             <FlatList
@@ -171,7 +158,7 @@ export default function Explore() {
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
                         <Ionicons name="search-outline" size={48} color="#EEE" />
-                        <Text style={styles.emptyText}>No results found</Text>
+                        <Text style={styles.emptyText}>{t('no_results')}</Text>
                     </View>
                 }
             />
@@ -182,113 +169,100 @@ export default function Explore() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFF',
+        backgroundColor: '#F8FAFC',
+    },
+    headerContainer: {
+        backgroundColor: '#F8FAFC',
+        paddingBottom: 8,
+        zIndex: 100, // Ensure header is above list
     },
     searchSection: {
-        paddingHorizontal: 24,
-        paddingTop: 16,
+        paddingHorizontal: 20,
+        paddingTop: 12,
+        paddingBottom: 8,
     },
     searchBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F8F8F8',
-        borderRadius: 16,
+        backgroundColor: '#FFF',
+        borderRadius: 12,
         paddingHorizontal: 16,
-        height: 56,
+        height: 52,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
         borderWidth: 1,
-        borderColor: '#EEE',
+        borderColor: '#F0F0F0',
     },
     searchInput: {
         flex: 1,
         marginLeft: 12,
         fontFamily: 'PlusJakartaSans_500Medium',
         fontSize: 16,
-        color: '#000',
-    },
-    categoriesScroll: {
-        maxHeight: 60,
-        marginTop: 16,
-    },
-    categoriesContent: {
-        paddingHorizontal: 24,
-        gap: 12,
-    },
-    categoryBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#F8F8F8',
-        paddingHorizontal: 20,
-        height: 44,
-        borderRadius: 12,
-        gap: 8,
-        borderWidth: 1,
-        borderColor: '#EEE',
-    },
-    activeCategoryBtn: {
-        backgroundColor: '#000',
-        borderColor: '#000',
-    },
-    categoryText: {
-        fontFamily: 'PlusJakartaSans_600SemiBold',
-        fontSize: 14,
-        color: '#000',
-    },
-    activeCategoryText: {
-        color: '#FFF',
+        color: '#1A1A1A',
     },
     filterSection: {
-        marginTop: 12,
+        paddingBottom: 8,
     },
     filtersContent: {
-        paddingHorizontal: 24,
+        paddingHorizontal: 20,
         gap: 8,
     },
     filterChip: {
         paddingHorizontal: 16,
         paddingVertical: 8,
-        borderRadius: 10,
+        borderRadius: 20,
         backgroundColor: '#FFF',
         borderWidth: 1,
-        borderColor: '#EEE',
+        borderColor: '#E2E8F0',
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
     },
     activeFilterChip: {
-        backgroundColor: '#000',
-        borderColor: '#000',
+        backgroundColor: '#1A1A1A',
+        borderColor: '#1A1A1A',
+        elevation: 2,
     },
     filterText: {
         fontFamily: 'PlusJakartaSans_500Medium',
         fontSize: 13,
-        color: '#666',
+        color: '#64748B',
     },
     activeFilterText: {
         color: '#FFF',
         fontFamily: 'PlusJakartaSans_600SemiBold',
     },
     listContent: {
-        padding: 24,
-        paddingBottom: 100,
+        padding: 20,
+        paddingTop: 8,
+        paddingBottom: 120,
     },
     card: {
         backgroundColor: '#FFF',
-        borderRadius: 24,
-        marginBottom: 24,
+        borderRadius: 20,
+        marginBottom: 20,
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: '#F0F0F0',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.05,
-        shadowRadius: 10,
+        shadowRadius: 12,
         elevation: 2,
     },
     cardImage: {
         width: '100%',
         height: 200,
-        backgroundColor: '#F0F0F0',
+        backgroundColor: '#F1F5F9',
     },
     cardContent: {
-        padding: 20,
-        gap: 12,
+        padding: 16,
+        gap: 10,
     },
     cardHeader: {
         flexDirection: 'row',
@@ -298,7 +272,7 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontFamily: 'PlusJakartaSans_700Bold',
         fontSize: 18,
-        color: '#000',
+        color: '#1A1A1A',
     },
     ratingBox: {
         flexDirection: 'row',
@@ -312,7 +286,7 @@ const styles = StyleSheet.create({
     ratingText: {
         fontFamily: 'PlusJakartaSans_700Bold',
         fontSize: 12,
-        color: '#FFCC00',
+        color: '#F59E0B',
     },
     locationRow: {
         flexDirection: 'row',
@@ -321,8 +295,8 @@ const styles = StyleSheet.create({
     },
     cardLocation: {
         fontFamily: 'PlusJakartaSans_500Medium',
-        fontSize: 13,
-        color: '#888',
+        fontSize: 14,
+        color: '#64748B',
     },
     priceRow: {
         flexDirection: 'row',
@@ -335,13 +309,13 @@ const styles = StyleSheet.create({
     },
     priceLabel: {
         fontFamily: 'PlusJakartaSans_500Medium',
-        fontSize: 12,
-        color: '#999',
+        fontSize: 13,
+        color: '#94A3B8',
     },
     priceValue: {
         fontFamily: 'PlusJakartaSans_800ExtraBold',
         fontSize: 18,
-        color: '#000',
+        color: '#1A1A1A',
     },
     emptyContainer: {
         alignItems: 'center',
@@ -352,6 +326,6 @@ const styles = StyleSheet.create({
     emptyText: {
         fontFamily: 'PlusJakartaSans_500Medium',
         fontSize: 16,
-        color: '#CCC',
+        color: '#94A3B8',
     }
 });

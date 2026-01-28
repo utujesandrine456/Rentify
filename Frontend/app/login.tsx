@@ -4,12 +4,14 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
 export default function Login() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const { t } = useLanguage();
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
 
@@ -47,14 +49,14 @@ export default function Login() {
                             style={styles.logo}
                             resizeMode="contain"
                         />
-                        <Text style={styles.heroTitle}>Welcome back</Text>
-                        <Text style={styles.heroSubtitle}>Enter your details to continue your journey.</Text>
+                        <Text style={styles.heroTitle}>{t('login_title')}</Text>
+                        <Text style={styles.heroSubtitle}>{t('login_subtitle')}</Text>
                     </Animated.View>
                 </View>
 
                 <View style={styles.form}>
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Phone Number</Text>
+                        <Text style={styles.label}>{t('phone_prompt')}</Text>
                         <TextInput
                             style={styles.input}
                             placeholder="+250 7..."
@@ -66,7 +68,7 @@ export default function Login() {
                     </View>
 
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Password</Text>
+                        <Text style={styles.label}>{t('password_label')}</Text>
                         <TextInput
                             style={styles.input}
                             placeholder="••••••••"
@@ -78,12 +80,12 @@ export default function Login() {
                     </View>
 
                     <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
-                        <Text style={styles.primaryButtonText}>LOGIN</Text>
+                        <Text style={styles.primaryButtonText}>{t('login_btn').toUpperCase()}</Text>
                         <Ionicons name="arrow-forward" size={18} color="#FFF" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/register')}>
-                        <Text style={styles.linkText}>New to Rentify? <Text style={styles.linkHighlight}>Create Account</Text></Text>
+                    <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/register' as any)}>
+                        <Text style={styles.linkText}>{t('no_account')} <Text style={styles.linkHighlight}>{t('signup_link')}</Text></Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>

@@ -2,9 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function FinalCTA() {
     const router = useRouter();
+    const { t } = useLanguage();
 
     return (
         <View style={styles.container}>
@@ -13,16 +15,15 @@ export default function FinalCTA() {
                 style={styles.card}
             >
                 <Text style={styles.title}>
-                    READY TO UPGRADE YOUR{'\n'}
-                    RENTAL JOURNEY?
+                    {t('cta_title').toUpperCase()}
                 </Text>
 
-                <TouchableOpacity style={styles.button} onPress={() => router.push('/terms')}>
-                    <Text style={styles.buttonText}>CREATE  ACCOUNT</Text>
+                <TouchableOpacity style={styles.button} onPress={() => router.push('/terms' as any)}>
+                    <Text style={styles.buttonText}>{t('signup_title').toUpperCase()}</Text>
                 </TouchableOpacity>
 
                 <Text style={styles.smallPrint}>
-                    No hidden fees. No paperwork. Just Rentify.
+                    {t('cta_subtitle')}
                 </Text>
             </Animated.View>
         </View>

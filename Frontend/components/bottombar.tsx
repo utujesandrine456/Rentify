@@ -42,7 +42,6 @@ export default function BottomBar({
                             style={styles.tab}
                             onPress={() => {
                                 if (onTabPress) {
-                                    // Normalize: convert 'payments' to 'pay' if necessary, or pass original
                                     let target = tab.name.toLowerCase();
                                     if (tab.name === 'Pay') target = 'pay';
                                     onTabPress(target);

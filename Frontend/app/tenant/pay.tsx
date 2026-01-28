@@ -4,10 +4,12 @@ import TopBar from '../../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function PayRent() {
     const router = useRouter();
     const { balance, totalPaid: totalPaidParam, isPartialPayment } = useLocalSearchParams();
+    const { t } = useLanguage();
 
     // Total rent is 150k. Remaining is either full or balance.
     const initialAmount = balance ? balance.toString() : '150000';
@@ -44,17 +46,17 @@ export default function PayRent() {
                     <View style={styles.successIcon}>
                         <Ionicons name="checkmark" size={40} color="#FFF" />
                     </View>
-                    <Text style={styles.successTitle}>Payment Successful!</Text>
+                    <Text style={styles.successTitle}>{t('payment_successful')}</Text>
                     <Text style={styles.statusBadge}>Status: {isFullyPaid ? 'PAID' : 'PARTIAL'}</Text>
                     <Text style={styles.successText}>You have successfully paid RWF {parseInt(paidAmount).toLocaleString()} for Feb 2026 rent.</Text>
-                    {!isFullyPaid && <Text style={styles.balanceText}>Remaining Balance: RWF {(150000 - totalPaid).toLocaleString()}</Text>}
+                    {!isFullyPaid && <Text style={styles.balanceText}>{t('remaining_balance')}: RWF {(150000 - totalPaid).toLocaleString()}</Text>}
                     <Text style={styles.receiptText}>Receipt ID: #TXN-98234</Text>
 
                     <TouchableOpacity
                         style={styles.primaryButton}
                         onPress={() => router.replace('/tenant/history')}
                     >
-                        <Text style={styles.primaryButtonText}>View History</Text>
+                        <Text style={styles.primaryButtonText}>{t('view_history')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.secondaryButton}
@@ -63,7 +65,7 @@ export default function PayRent() {
                             params: { paidAmount: totalPaid.toString() }
                         })}
                     >
-                        <Text style={styles.secondaryButtonText}>Back Home</Text>
+                        <Text style={styles.secondaryButtonText}>{t('back_home')}</Text>
                     </TouchableOpacity>
                 </Animated.View>
             </View>
@@ -73,26 +75,26 @@ export default function PayRent() {
     if (initialAmount === '0') {
         return (
             <View style={styles.container}>
-                <TopBar title="Rent Paid" showBack onBackPress={() => router.back()} />
+                <TopBar title={t('all_settled')} showBack onBackPress={() => router.back()} />
                 <View style={[styles.successContainer, { backgroundColor: '#F7F7F7' }]}>
                     <Animated.View entering={FadeInDown.springify()} style={styles.successCard}>
                         <View style={styles.successIcon}>
                             <Ionicons name="checkmark-done-circle" size={40} color="#FFF" />
                         </View>
-                        <Text style={styles.successTitle}>All Settled!</Text>
-                        <Text style={styles.successText}>You have already paid all the money for February 2026. Keep it up!</Text>
+                        <Text style={styles.successTitle}>{t('all_settled')}</Text>
+                        <Text style={styles.successText}>{t('all_paid_msg')}</Text>
 
                         <TouchableOpacity
                             style={styles.primaryButton}
                             onPress={() => router.replace('/tenant/history')}
                         >
-                            <Text style={styles.primaryButtonText}>View History</Text>
+                            <Text style={styles.primaryButtonText}>{t('view_history')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.secondaryButton}
                             onPress={() => router.replace('/tenant')}
                         >
-                            <Text style={styles.secondaryButtonText}>Back Home</Text>
+                            <Text style={styles.secondaryButtonText}>{t('back_home')}</Text>
                         </TouchableOpacity>
                     </Animated.View>
                 </View>
@@ -103,55 +105,55 @@ export default function PayRent() {
     return (
         <View style={styles.container}>
             <TopBar
-                title="Pay Rent"
+                title={t('pay_rent')}
                 showBack={true}
                 onBackPress={() => router.back()}
             />
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.billCard}>
-                    <Text style={styles.label}>{isReturningForBalance ? 'Remaining Balance' : 'Total Amount Due'}</Text>
+                    <Text style={styles.label}>{isReturningForBalance ? t('remaining_balance') : t('total_amount_due')}</Text>
                     <Text style={styles.amount}>RWF {parseInt(initialAmount).toLocaleString()}</Text>
                     {isReturningForBalance && (
                         <View style={styles.prevPaymentRow}>
-                            <Text style={styles.prevLabel}>Previously Paid: RWF {prevPaid.toLocaleString()}</Text>
+                            <Text style={styles.prevLabel}>{t('previously_paid')}: RWF {prevPaid.toLocaleString()}</Text>
                         </View>
                     )}
                     <View style={styles.row}>
-                        <Text style={styles.rowLabel}>Landlord</Text>
+                        <Text style={styles.rowLabel}>{t('landlord')}</Text>
                         <Text style={styles.rowValue}>John M.</Text>
                     </View>
                     <View style={styles.row}>
-                        <Text style={styles.rowLabel}>Property</Text>
+                        <Text style={styles.rowLabel}>{t('property')}</Text>
                         <Text style={styles.rowValue}>Apt 4B</Text>
                     </View>
                     <View style={styles.row}>
-                        <Text style={styles.rowLabel}>Month</Text>
+                        <Text style={styles.rowLabel}>{t('month')}</Text>
                         <Text style={styles.rowValue}>February 2026</Text>
                     </View>
                 </View>
 
                 <View style={styles.selectionSection}>
-                    <Text style={styles.sectionTitle}>Payment Type</Text>
+                    <Text style={styles.sectionTitle}>{t('payment_type')}</Text>
                     <View style={styles.typeRow}>
                         <TouchableOpacity
                             style={[styles.typeBtn, paymentType === 'full' && styles.typeBtnActive]}
                             onPress={() => setPaymentType('full')}
                         >
-                            <Text style={[styles.typeBtnText, paymentType === 'full' && styles.typeBtnTextActive]}>Full Payment</Text>
+                            <Text style={[styles.typeBtnText, paymentType === 'full' && styles.typeBtnTextActive]}>{t('full_payment')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={[styles.typeBtn, paymentType === 'partial' && styles.typeBtnActive]}
                             onPress={() => setPaymentType('partial')}
                         >
-                            <Text style={[styles.typeBtnText, paymentType === 'partial' && styles.typeBtnTextActive]}>Partial Payment</Text>
+                            <Text style={[styles.typeBtnText, paymentType === 'partial' && styles.typeBtnTextActive]}>{t('partial_payment')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
 
                 {paymentType === 'partial' && (
                     <Animated.View entering={FadeInDown} style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Enter Amount (RWF)</Text>
+                        <Text style={styles.inputLabel}>{t('enter_amount')} (RWF)</Text>
                         <TextInput
                             style={styles.textInput}
                             value={customAmount}
@@ -162,7 +164,7 @@ export default function PayRent() {
                     </Animated.View>
                 )}
 
-                <Text style={styles.sectionTitle}>Select Payment Method</Text>
+                <Text style={styles.sectionTitle}>{t('select_payment_method')}</Text>
 
                 <TouchableOpacity style={styles.paymentMethod} onPress={handlePayment} disabled={processing}>
                     <View style={[styles.methodIcon, { backgroundColor: '#FFCC00' }]}>
@@ -170,7 +172,7 @@ export default function PayRent() {
                     </View>
                     <View style={styles.methodInfo}>
                         <Text style={styles.methodTitle}>MTN Mobile Money</Text>
-                        <Text style={styles.methodSub}>Pay directly from your phone</Text>
+                        <Text style={styles.methodSub}>{t('momo_sub')}</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={24} color="#CCC" />
                 </TouchableOpacity>
@@ -181,7 +183,7 @@ export default function PayRent() {
                     </View>
                     <View style={styles.methodInfo}>
                         <Text style={styles.methodTitle}>Airtel Money</Text>
-                        <Text style={styles.methodSub}>Pay directly from your phone</Text>
+                        <Text style={styles.methodSub}>{t('airtel_sub')}</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={24} color="#CCC" />
                 </TouchableOpacity>
@@ -189,8 +191,8 @@ export default function PayRent() {
                 {processing && (
                     <View style={styles.loadingOverlay}>
                         <ActivityIndicator size="large" color="#000" />
-                        <Text style={styles.loadingText}>Processing Payment...</Text>
-                        <Text style={styles.loadingSub}>Please check your phone for the prompt.</Text>
+                        <Text style={styles.loadingText}>{t('processing_payment')}</Text>
+                        <Text style={styles.loadingSub}>{t('phone_prompt')}</Text>
                     </View>
                 )}
             </ScrollView>

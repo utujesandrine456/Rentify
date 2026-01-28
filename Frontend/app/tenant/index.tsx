@@ -6,10 +6,12 @@ import TopBar from '../../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function TenantHome() {
     const router = useRouter();
     const { paidAmount: paidParam, isLate: lateParam } = useLocalSearchParams();
+    const { t } = useLanguage();
 
     const totalRent = 150000;
     const paidAmount = parseInt(paidParam as string || '0');
@@ -30,7 +32,7 @@ export default function TenantHome() {
     return (
         <View style={styles.container}>
             <TopBar
-                title="Tenant"
+                title={t('tenant_dashboard')}
                 onNotificationPress={() => router.push('/notifications')}
                 onMenuPress={() => router.push('/settings')}
             />
@@ -40,7 +42,7 @@ export default function TenantHome() {
                 showsVerticalScrollIndicator={false}
             >
                 <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.greetingHeader}>
-                    <Text style={styles.greetingText}>Welcome back, Tony</Text>
+                    <Text style={styles.greetingText}>{t('welcome')}, Tony</Text>
                     <Text style={styles.subGreeting}>
                         {isPaid ? "You're all set for this month!" : isRestricted ? "Access restricted. Please clear balance." : "Everything is looking good today."}
                     </Text>
@@ -55,7 +57,7 @@ export default function TenantHome() {
                     >
                         <View style={styles.statusLeft}>
                             <View style={[styles.statusIndicator, { backgroundColor: isPaid ? '#4CD964' : isRestricted ? '#FF3B30' : '#FFCC00' }]} />
-                            <Text style={styles.statusLabel}>Rent Status</Text>
+                            <Text style={styles.statusLabel}>{t('rent_status')}</Text>
                         </View>
                         <Text style={[styles.statusValue, isRestricted && { color: '#FF3B30' }]}>{status}</Text>
                     </TouchableOpacity>
@@ -65,7 +67,7 @@ export default function TenantHome() {
                 <Animated.View entering={FadeInDown.delay(300).duration(800)} style={[styles.card, isRestricted && styles.restrictedCard]}>
                     <View style={styles.cardInfo}>
                         <View style={styles.cardRow}>
-                            <Text style={styles.cardLabel}>{isPaid ? 'Last Payment' : isPartial ? 'Balance Due' : 'Next Payment'}</Text>
+                            <Text style={styles.cardLabel}>{isPaid ? t('last_payment') : isPartial ? t('balance_due') : t('next_payment')}</Text>
                             {isPartial && <Text style={styles.progressText}>{Math.round(progress * 100)}% Paid</Text>}
                         </View>
                         <Text style={styles.amountText}>RWF {remainingBalance.toLocaleString()}</Text>
@@ -90,9 +92,9 @@ export default function TenantHome() {
                                         totalPaid: paidAmount.toString(),
                                         isPartialPayment: (isPartial || isRestricted).toString()
                                     }
-                                })}
+                                } as any)}
                             >
-                                <Text style={styles.payButtonText}>{isPartial ? 'Pay Balance' : 'Pay Now'}</Text>
+                                <Text style={styles.payButtonText}>{isPartial ? 'Pay Balance' : t('pay_now')}</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -100,18 +102,22 @@ export default function TenantHome() {
 
                 <Animated.View entering={FadeInDown.delay(400).duration(800)} style={styles.propertySection}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Active Residence</Text>
-                        <TouchableOpacity onPress={() => {/* Navigate to details if needed */ }}>
-                            <Text style={styles.viewMoreText}>View Details</Text>
+                        <Text style={styles.sectionTitle}>{t('active_residence')}</Text>
+                        <TouchableOpacity onPress={() => router.push('/tenant/residence' as any)}>
+                            <Text style={styles.viewMoreText}>{t('view_details')}</Text>
                         </TouchableOpacity>
                     </View>
-                    <TouchableOpacity style={styles.propertyCard} activeOpacity={0.9}>
+                    <TouchableOpacity
+                        style={styles.propertyCard}
+                        activeOpacity={0.9}
+                        onPress={() => router.push("/tenant/residence" as any)}
+                    >
                         <Image
                             source={require('../../assets/images/RentifyLanding.jpg')}
                             style={styles.propertyImage}
                         />
                         <View style={styles.propertyTag}>
-                            <Text style={styles.tagText}>CURRENT HOME</Text>
+                            <Text style={styles.tagText}>{t('current_home')}</Text>
                         </View>
                         <View style={styles.propertyOverlay}>
                             <View style={styles.propertyMeta}>
@@ -121,39 +127,9 @@ export default function TenantHome() {
                                     <Text style={styles.propertyAddress}>Kigali, Kicukiro, Niboye</Text>
                                 </View>
                             </View>
+                            <Ionicons name="chevron-forward" size={24} color="#FFF" />
                         </View>
                     </TouchableOpacity>
-                </Animated.View>
-
-                {/* Quick Actions */}
-                <Animated.View entering={FadeInDown.delay(500).duration(800)} style={styles.quickActions}>
-                    <Text style={styles.sectionTitle}>Quick Actions</Text>
-                    <View style={styles.actionGrid}>
-                        <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/tenant/explore')}>
-                            <View style={[styles.actionIcon, { backgroundColor: '#F0F7FF' }]}>
-                                <Ionicons name="search" size={24} color="#007AFF" />
-                            </View>
-                            <Text style={styles.actionLabel}>Explore</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/tenant/history')}>
-                            <View style={[styles.actionIcon, { backgroundColor: '#F0FFF4' }]}>
-                                <Ionicons name="time" size={24} color="#34C759" />
-                            </View>
-                            <Text style={styles.actionLabel}>History</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/tenant/pay')}>
-                            <View style={[styles.actionIcon, { backgroundColor: '#FFF9E6' }]}>
-                                <Ionicons name="wallet" size={24} color="#FFCC00" />
-                            </View>
-                            <Text style={styles.actionLabel}>Payments</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/tenant/profile')}>
-                            <View style={[styles.actionIcon, { backgroundColor: '#FFF5F5' }]}>
-                                <Ionicons name="person" size={24} color="#FF3B30" />
-                            </View>
-                            <Text style={styles.actionLabel}>Profile</Text>
-                        </TouchableOpacity>
-                    </View>
                 </Animated.View>
             </ScrollView>
         </View>
@@ -310,6 +286,9 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.6)',
         padding: 24,
         paddingTop: 48,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
     propertyTag: {
         position: 'absolute',

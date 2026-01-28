@@ -4,11 +4,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLanguage } from '../../../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
 const MOCK_DETAILS = {
     '1': {
+        type: 'houses',
         title: 'Modern Villa with Garden',
         location: 'Kigali, Nyarutarama, St 450',
         price: '450,000',
@@ -23,9 +25,16 @@ const MOCK_DETAILS = {
             phone: '+250 788 000 000',
             avatar: 'R'
         },
-        features: ['4 Bedrooms', '3 Bathrooms', 'Private Garden', 'Security System', 'Garage']
+        features: [
+            { icon: 'bed-outline', label: '4 Bedrooms' },
+            { icon: 'water-outline', label: '3 Bathrooms' },
+            { icon: 'leaf-outline', label: 'Private Garden' },
+            { icon: 'shield-checkmark-outline', label: 'Security System' },
+            { icon: 'car-outline', label: 'Garage' }
+        ]
     },
     '2': {
+        type: 'houses',
         title: 'Cozy Smart Apartment',
         location: 'Kigali, Kacyiru, Near US Embassy',
         price: '150,000',
@@ -39,16 +48,21 @@ const MOCK_DETAILS = {
             phone: '+250 788 111 222',
             avatar: 'S'
         },
-        features: ['1 Bedroom', 'Fully Furnished', 'Smart Locks', 'Gym Access']
-    }
+        features: [
+            { icon: 'bed-outline', label: '1 Bedroom' },
+            { icon: 'tv-outline', label: 'Fully Furnished' },
+            { icon: 'lock-closed-outline', label: 'Smart Locks' },
+            { icon: 'fitness-outline', label: 'Gym Access' }
+        ]
+    },
 };
 
 export default function ExploreDetails() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const { t } = useLanguage();
 
-    // Fallback to ID 1 if not found in mock
     const details = MOCK_DETAILS[id as keyof typeof MOCK_DETAILS] || MOCK_DETAILS['1'];
 
     const handleCall = () => {
@@ -71,13 +85,13 @@ export default function ExploreDetails() {
 
                     <TouchableOpacity
                         style={[styles.backButton, { top: insets.top + 16 }]}
-                        onPress={() => router.back()}
+                        onPress={() => router.push('/tenant/explore')}
                     >
                         <Ionicons name="arrow-back" size={24} color="#000" />
                     </TouchableOpacity>
 
                     <View style={styles.imageBadge}>
-                        <Text style={styles.imageBadgeText}>{details.images.length} Photos</Text>
+                        <Text style={styles.imageBadgeText}>{details.images.length} {t('photos')}</Text>
                     </View>
                 </View>
 
@@ -91,22 +105,24 @@ export default function ExploreDetails() {
                     </Animated.View>
 
                     <Animated.View entering={FadeInUp.delay(100).duration(600)} style={styles.priceCard}>
-                        <Text style={styles.priceLabel}>Monthly Rent</Text>
+                        <Text style={styles.priceLabel}>{t('monthly_rent')}</Text>
                         <Text style={styles.priceValue}>RWF {details.price}</Text>
                     </Animated.View>
 
                     <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.section}>
-                        <Text style={styles.sectionTitle}>Description</Text>
+                        <Text style={styles.sectionTitle}>{t('description')}</Text>
                         <Text style={styles.descriptionText}>{details.description}</Text>
                     </Animated.View>
 
                     <Animated.View entering={FadeInUp.delay(300).duration(600)} style={styles.section}>
-                        <Text style={styles.sectionTitle}>Key Features</Text>
+                        <Text style={styles.sectionTitle}>{t('features')}</Text>
                         <View style={styles.featureGrid}>
-                            {details.features.map((feature, index) => (
+                            {details.features.map((feature: any, index: number) => (
                                 <View key={index} style={styles.featureItem}>
-                                    <Ionicons name="checkmark-circle-outline" size={16} color="#4CD964" />
-                                    <Text style={styles.featureText}>{feature}</Text>
+                                    <View style={styles.featureIconContainer}>
+                                        <Ionicons name={feature.icon as any} size={18} color="#000" />
+                                    </View>
+                                    <Text style={styles.featureText}>{feature.label}</Text>
                                 </View>
                             ))}
                         </View>
@@ -119,19 +135,21 @@ export default function ExploreDetails() {
                             </View>
                             <View>
                                 <Text style={styles.landlordName}>{details.landlord.name}</Text>
-                                <Text style={styles.landlordType}>Verified Landlord</Text>
+                                <Text style={styles.landlordType}>{t('verified_landlord')}</Text>
                             </View>
                         </View>
                     </Animated.View>
+
+                    <View style={styles.bottomAction}>
+                        <TouchableOpacity style={styles.callButton} onPress={handleCall}>
+                            <Ionicons name="call" size={20} color="#FFF" />
+                            <Text style={styles.callButtonText}>{t('call_landlord')}</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </ScrollView>
 
-            <View style={[styles.bottomAction, { paddingBottom: insets.bottom + 16 }]}>
-                <TouchableOpacity style={styles.callButton} onPress={handleCall}>
-                    <Ionicons name="call" size={20} color="#FFF" />
-                    <Text style={styles.callButtonText}>CALL LANDLORD</Text>
-                </TouchableOpacity>
-            </View>
+
         </View>
     );
 }
@@ -142,7 +160,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF',
     },
     scrollContent: {
-        paddingBottom: 120,
+        paddingBottom: 100,
     },
     imageContainer: {
         height: 400,
@@ -248,15 +266,26 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#F7F7F7',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 12,
-        gap: 8,
+        padding: 12,
+        borderRadius: 8,
+        gap: 12,
+        width: (width - 84) / 2, 
+    },
+    featureIconContainer: {
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        backgroundColor: '#FFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#EEE',
     },
     featureText: {
         fontFamily: 'PlusJakartaSans_600SemiBold',
-        fontSize: 14,
+        fontSize: 13,
         color: '#000',
+        flex: 1,
     },
     landlordSection: {
         marginTop: 40,
@@ -293,15 +322,9 @@ const styles = StyleSheet.create({
         color: '#888',
     },
     bottomAction: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
         backgroundColor: '#FFF',
         paddingHorizontal: 24,
         paddingTop: 16,
-        borderTopWidth: 1,
-        borderTopColor: '#F0F0F0',
     },
     callButton: {
         backgroundColor: '#000',

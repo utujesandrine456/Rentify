@@ -1,20 +1,21 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function MinimalFooter() {
+    const { t } = useLanguage();
     return (
         <View style={styles.container}>
             <View style={styles.row}>
                 <Text style={styles.logo}>RENTIFY</Text>
                 <View style={styles.links}>
-                    <Text style={styles.link}>TERMS</Text>
-                    <Text style={styles.link}>PRIVACY</Text>
-                    <Text style={styles.link}>CONTACT</Text>
+                    <Text style={styles.link}>{t('privacy_policy').toUpperCase()}</Text>
+                    <Text style={styles.link}>{t('contact_us').toUpperCase()}</Text>
                 </View>
             </View>
             <View style={styles.divider} />
             <Text style={styles.copyright}>
-                © 2026 RENTIFY TECHNOLOGIES. ALL RIGHTS RESERVED.
+                © 2026 RENTIFY. {t('all_settled').toUpperCase()}
             </Text>
         </View>
     );

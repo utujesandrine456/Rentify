@@ -9,7 +9,6 @@ export default function Profile() {
     const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
 
-    // User data state
     const [userData, setUserData] = useState({
         name: 'Tony Manero',
         phone: '+250 788 123 456',

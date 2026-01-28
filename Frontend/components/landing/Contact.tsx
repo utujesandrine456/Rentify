@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Linking, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { useAnimatedStyle, withRepeat, withSequence, withTiming, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import { useLanguage } from '../../context/LanguageContext';
 
 const { width } = Dimensions.get('window');
 
 export default function Contact() {
+    const { t } = useLanguage();
     const [email, setEmail] = useState('');
 
     const callIconStyle = useAnimatedStyle(() => ({
@@ -29,9 +31,9 @@ export default function Contact() {
         <View style={styles.container}>
             <View style={styles.glassContainer}>
                 <View style={styles.badge}>
-                    <Text style={styles.badgeText}>LET'S CONNECT</Text>
+                    <Text style={styles.badgeText}>{t('contact_us').toUpperCase()}</Text>
                 </View>
-                <Text style={styles.title}>Ready to transform your renting experience?</Text>
+                <Text style={styles.title}>{t('cta_title')}</Text>
 
                 <View style={styles.inputWrapper}>
                     <TextInput

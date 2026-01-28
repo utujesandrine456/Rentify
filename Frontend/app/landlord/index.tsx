@@ -4,14 +4,16 @@ import TopBar from '../../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function LandlordDashboard() {
     const router = useRouter();
+    const { t } = useLanguage();
 
     return (
         <View style={styles.container}>
             <TopBar
-                title="Landlord Dashboard"
+                title={t('landlord_dashboard')}
                 onNotificationPress={() => router.push('/notifications')}
                 onMenuPress={() => router.push('/settings')}
             />
@@ -21,8 +23,8 @@ export default function LandlordDashboard() {
                 showsVerticalScrollIndicator={false}
             >
                 <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.header}>
-                    <Text style={styles.greeting}>Hello, Landlord</Text>
-                    <Text style={styles.subGreeting}>Manage your properties and tenants with ease.</Text>
+                    <Text style={styles.greeting}>{t('welcome_name')}, Landlord</Text>
+                    <Text style={styles.subGreeting}>{t('manage_properties_subtitle')}</Text>
                 </Animated.View>
 
                 <View style={styles.statsGrid}>
@@ -34,11 +36,11 @@ export default function LandlordDashboard() {
                             <Ionicons name="wallet" size={24} color="#FFF" />
                         </View>
                         <View>
-                            <Text style={styles.statLabelLight}>Income (This Month)</Text>
+                            <Text style={styles.statLabelLight}>{t('income_this_month')}</Text>
                             <Text style={styles.statValueLight}>700,000 Frw</Text>
                         </View>
                         <TouchableOpacity style={styles.statActionLight} onPress={() => { }}>
-                            <Text style={styles.statActionTextLight}>View Details</Text>
+                            <Text style={styles.statActionTextLight}>{t('view_details')}</Text>
                             <Ionicons name="arrow-forward" size={14} color="#FFF" />
                         </TouchableOpacity>
                     </Animated.View>
@@ -50,8 +52,8 @@ export default function LandlordDashboard() {
                         <View style={[styles.iconCircle, { backgroundColor: '#F0F7FF' }]}>
                             <Ionicons name="people" size={20} color="#007AFF" />
                         </View>
-                        <Text style={styles.statLabel}>Total Tenants</Text>
-                        <Text style={styles.statValue}>8 Active</Text>
+                        <Text style={styles.statLabel}>{t('total_tenants')}</Text>
+                        <Text style={styles.statValue}>8 {t('active')}</Text>
                     </Animated.View>
 
                     <Animated.View
@@ -61,8 +63,8 @@ export default function LandlordDashboard() {
                         <View style={[styles.iconCircle, { backgroundColor: '#F0FFF4' }]}>
                             <Ionicons name="business" size={20} color="#34C759" />
                         </View>
-                        <Text style={styles.statLabel}>Properties</Text>
-                        <Text style={styles.statValue}>3 Units</Text>
+                        <Text style={styles.statLabel}>{t('properties')}</Text>
+                        <Text style={styles.statValue}>3 {t('units')}</Text>
                     </Animated.View>
 
                     <Animated.View
@@ -72,13 +74,13 @@ export default function LandlordDashboard() {
                         <View style={[styles.iconCircle, { backgroundColor: '#FFEEED' }]}>
                             <Ionicons name="alert-circle" size={20} color="#FF3B30" />
                         </View>
-                        <Text style={styles.statLabel}>Pending Tasks</Text>
-                        <Text style={[styles.statValue, { color: '#FF3B30' }]}>2 Unpaid</Text>
+                        <Text style={styles.statLabel}>{t('pending_tasks')}</Text>
+                        <Text style={[styles.statValue, { color: '#FF3B30' }]}>2 {t('unpaid')}</Text>
                     </Animated.View>
                 </View>
 
                 <Animated.View entering={FadeInUp.delay(500).duration(800)}>
-                    <Text style={styles.sectionTitle}>Quick Actions</Text>
+                    <Text style={styles.sectionTitle}>{t('quick_actions')}</Text>
 
                     <TouchableOpacity
                         style={styles.actionButton}
@@ -88,8 +90,8 @@ export default function LandlordDashboard() {
                             <Ionicons name="add" size={24} color="#FFF" />
                         </View>
                         <View style={styles.actionContent}>
-                            <Text style={styles.actionTitle}>Add Property</Text>
-                            <Text style={styles.actionSub}>List a new unit for rent</Text>
+                            <Text style={styles.actionTitle}>{t('add_property')}</Text>
+                            <Text style={styles.actionSub}>{t('list_new_unit')}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color="#EEE" />
                     </TouchableOpacity>
@@ -102,8 +104,8 @@ export default function LandlordDashboard() {
                             <Ionicons name="search" size={20} color="#FFF" />
                         </View>
                         <View style={styles.actionContent}>
-                            <Text style={styles.actionTitle}>View Tenants</Text>
-                            <Text style={styles.actionSub}>Check status & payments</Text>
+                            <Text style={styles.actionTitle}>{t('view_tenants')}</Text>
+                            <Text style={styles.actionSub}>{t('check_status_payments')}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color="#EEE" />
                     </TouchableOpacity>

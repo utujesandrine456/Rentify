@@ -4,11 +4,13 @@ import TopBar from '../../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function LandlordSearch() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const router = useRouter();
+    const { t } = useLanguage();
 
     const handleSearch = () => {
         if (searchQuery.length > 5) {
@@ -21,18 +23,18 @@ export default function LandlordSearch() {
                 setIsSearching(false);
             }, 1000);
         } else {
-            alert('Please enter a valid phone number');
+            alert(t('valid_phone_msg'));
         }
     };
 
     return (
         <View style={styles.container}>
-            <TopBar title="Search Tenant" />
+            <TopBar title={t('search_tenant')} />
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.headerSection}>
-                    <Text style={styles.title}>Verify Your Next Tenant</Text>
-                    <Text style={styles.subtitle}>Enter a tenant's phone number to see their reliability score and payment history.</Text>
+                    <Text style={styles.title}>{t('verify_tenant_title')}</Text>
+                    <Text style={styles.subtitle}>{t('verify_tenant_subtitle')}</Text>
                 </Animated.View>
 
                 <Animated.View entering={FadeInUp.delay(200).duration(800)} style={styles.searchContainer}>
@@ -54,10 +56,10 @@ export default function LandlordSearch() {
                         disabled={isSearching || searchQuery.length < 8}
                     >
                         {isSearching ? (
-                            <Text style={styles.searchBtnText}>SEARCHING...</Text>
+                            <Text style={styles.searchBtnText}>{t('searching')}</Text>
                         ) : (
                             <>
-                                <Text style={styles.searchBtnText}>VIEW PROFILE</Text>
+                                <Text style={styles.searchBtnText}>{t('view_profile')}</Text>
                                 <Ionicons name="arrow-forward" size={18} color="#FFF" />
                             </>
                         )}

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function TopBar({
     title,
@@ -21,6 +22,7 @@ export default function TopBar({
 }) {
     const insets = useSafeAreaInsets();
     const router = useRouter();
+    const { language, toggleLanguage, t } = useLanguage();
 
     return (
         <View style={[styles.container, { paddingTop: insets.top + 16 }]}>
@@ -84,6 +86,19 @@ const styles = StyleSheet.create({
     },
     iconBtn: {
         padding: 4,
+    },
+    langBtn: {
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+    },
+    langText: {
+        fontFamily: 'PlusJakartaSans_700Bold',
+        fontSize: 12,
+        color: '#FFF',
     },
     title: {
         fontFamily: 'PlusJakartaSans_800ExtraBold',

@@ -4,12 +4,14 @@ import TopBar from '../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
+import { useLanguage } from '../context/LanguageContext';
 
 interface SettingsItem {
     icon: string;
     label: string;
     route?: string;
     extra?: string;
+    onPress?: () => void;
 }
 
 interface SettingsSection {
@@ -19,28 +21,34 @@ interface SettingsSection {
 
 export default function Settings() {
     const router = useRouter();
+    const { t, language, setLanguage } = useLanguage();
 
     const sections: SettingsSection[] = [
         {
-            title: 'Account',
+            title: t('account'),
             items: [
-                { icon: 'person-outline', label: 'Edit Profile', route: '/tenant/profile' },
-                { icon: 'shield-checkmark-outline', label: 'Security', route: '/security' },
-                { icon: 'notifications-outline', label: 'Notifications', route: '/notifications' }
+                { icon: 'person-outline', label: t('edit_profile'), route: '/tenant/profile' },
+                { icon: 'shield-checkmark-outline', label: t('security'), route: '/security' },
+                { icon: 'notifications-outline', label: t('notifications'), route: '/notifications' }
             ]
         },
         {
-            title: 'Preferences',
+            title: t('preferences'),
             items: [
-                { icon: 'color-palette-outline', label: 'Appearance', extra: 'Light Mode' },
-                { icon: 'globe-outline', label: 'Language', extra: 'English' }
+                { icon: 'color-palette-outline', label: t('appearance'), extra: 'Light Mode' },
+                {
+                    icon: 'globe-outline',
+                    label: t('language'),
+                    extra: language === 'en' ? 'English' : 'Ikinyarwanda',
+                    onPress: () => setLanguage(language === 'en' ? 'rw' : 'en')
+                }
             ]
         },
         {
-            title: 'Support',
+            title: t('support'),
             items: [
-                { icon: 'help-circle-outline', label: 'Help Center' },
-                { icon: 'document-text-outline', label: 'Privacy Policy' }
+                { icon: 'help-circle-outline', label: t('help_center') },
+                { icon: 'document-text-outline', label: t('privacy_policy') }
             ]
         }
     ];
@@ -48,7 +56,7 @@ export default function Settings() {
     return (
         <View style={styles.container}>
             <TopBar
-                title="Settings"
+                title={t('settings')}
                 showBack
                 onBackPress={() => router.back()}
                 showProfile={false}
@@ -66,7 +74,10 @@ export default function Settings() {
                                 <View key={item.label}>
                                     <TouchableOpacity
                                         style={styles.item}
-                                        onPress={() => item.route && router.push(item.route as any)}
+                                        onPress={() => {
+                                            if (item.onPress) item.onPress();
+                                            else if (item.route) router.push(item.route as any);
+                                        }}
                                     >
                                         <View style={styles.itemLeft}>
                                             <View style={styles.iconBox}>
@@ -90,7 +101,7 @@ export default function Settings() {
                     style={styles.logoutBtn}
                     onPress={() => router.replace('/login')}
                 >
-                    <Text style={styles.logoutText}>Sign Out</Text>
+                    <Text style={styles.logoutText}>{t('sign_out')}</Text>
                 </TouchableOpacity>
             </ScrollView>
         </View>

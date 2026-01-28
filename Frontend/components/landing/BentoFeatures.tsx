@@ -27,8 +27,11 @@ const features = [
     }
 ];
 
+import { useLanguage } from '../../context/LanguageContext';
+
 export default function BentoFeatures() {
     const { width } = useWindowDimensions();
+    const { t } = useLanguage();
     const isMobile = width < 768;
 
     return (
@@ -37,8 +40,9 @@ export default function BentoFeatures() {
                 entering={FadeInDown.duration(800)}
                 style={styles.header}
             >
-                <Text style={styles.label}>CAPABILITIES</Text>
-                <Text style={styles.title}>ENGINEERED FOR{'\n'}CLARITY.</Text>
+                <Text style={styles.label}>{t('features').toUpperCase()}</Text>
+                <Text style={styles.title}>{t('features_title').toUpperCase()}</Text>
+                <Text style={styles.cardDesc}>{t('features_subtitle')}</Text>
             </Animated.View>
 
             <View style={styles.grid}>

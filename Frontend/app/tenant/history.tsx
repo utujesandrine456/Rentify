@@ -4,9 +4,11 @@ import TopBar from '../../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useLocalSearchParams } from 'expo-router';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function PaymentHistory() {
     const { paidAmount: paidParam } = useLocalSearchParams();
+    const { t } = useLanguage();
     const paidAmount = parseInt(paidParam as string || '0');
     const totalRent = 150000;
     const balance = totalRent - paidAmount;
@@ -18,7 +20,7 @@ export default function PaymentHistory() {
 
     return (
         <View style={styles.container}>
-            <TopBar title="Payment History" showBack />
+            <TopBar title={t('payment_history')} showBack />
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {history.map((item, index) => (
@@ -39,15 +41,15 @@ export default function PaymentHistory() {
 
                         <View style={styles.breakdown}>
                             <View style={styles.breakdownItem}>
-                                <Text style={styles.breakdownLabel}>Total Rent</Text>
+                                <Text style={styles.breakdownLabel}>{t('total_rent')}</Text>
                                 <Text style={styles.breakdownValue}>RWF {item.total.toLocaleString()}</Text>
                             </View>
                             <View style={styles.breakdownItem}>
-                                <Text style={styles.breakdownLabel}>Paid</Text>
+                                <Text style={styles.breakdownLabel}>{t('paid')}</Text>
                                 <Text style={[styles.breakdownValue, { color: '#4CD964' }]}>RWF {item.paid.toLocaleString()}</Text>
                             </View>
                             <View style={styles.breakdownItem}>
-                                <Text style={styles.breakdownLabel}>Balance</Text>
+                                <Text style={styles.breakdownLabel}>{t('balance')}</Text>
                                 <Text style={[styles.breakdownValue, { color: item.balance > 0 ? '#FF3B30' : '#888' }]}>RWF {item.balance.toLocaleString()}</Text>
                             </View>
                         </View>
