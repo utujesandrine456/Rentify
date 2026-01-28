@@ -46,6 +46,7 @@ export default function RootLayout() {
         <Stack.Screen name="landlord" options={{ headerShown: false }} />
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ headerShown: false }} />
+        <Stack.Screen name="terms" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );

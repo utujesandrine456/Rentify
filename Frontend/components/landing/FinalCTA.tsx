@@ -17,7 +17,7 @@ export default function FinalCTA() {
                     RENTAL JOURNEY?
                 </Text>
 
-                <TouchableOpacity style={styles.button} onPress={() => router.push('/register')}>
+                <TouchableOpacity style={styles.button} onPress={() => router.push('/terms')}>
                     <Text style={styles.buttonText}>CREATE  ACCOUNT</Text>
                 </TouchableOpacity>
 

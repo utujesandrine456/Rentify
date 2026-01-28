@@ -112,6 +112,10 @@ export default function Register() {
                             />
                         </View>
 
+                        <Text style={styles.termsText}>
+                            By continuing, you agree to our <Text style={styles.termsLink} onPress={() => router.push('/terms')}>Terms of Service</Text>
+                        </Text>
+
                         <TouchableOpacity style={styles.primaryButton} onPress={handleRegister}>
                             <Text style={styles.primaryButtonText}>SEND CODE</Text>
                             <Ionicons name="arrow-forward" size={18} color="#FFF" />
@@ -219,9 +223,9 @@ const styles = StyleSheet.create({
         gap: 20,
         borderTopRightRadius: 48,
         borderTopLeftRadius: 48,
-        marginTop: -48,  
-        zIndex: 50,              
-        elevation: 20,           
+        marginTop: -48,
+        zIndex: 50,
+        elevation: 20,
     },
     roleSwitcher: {
         flexDirection: 'row',
@@ -305,5 +309,18 @@ const styles = StyleSheet.create({
     linkHighlight: {
         color: '#000',
         fontFamily: 'PlusJakartaSans_700Bold',
+    },
+    termsText: {
+        fontFamily: 'PlusJakartaSans_500Medium',
+        fontSize: 12,
+        color: '#888',
+        textAlign: 'center',
+        marginTop: 8,
+        lineHeight: 18,
+    },
+    termsLink: {
+        color: '#000',
+        fontFamily: 'PlusJakartaSans_700Bold',
+        textDecorationLine: 'underline',
     },
 });

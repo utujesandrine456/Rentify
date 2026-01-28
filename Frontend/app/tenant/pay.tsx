@@ -70,6 +70,36 @@ export default function PayRent() {
         );
     }
 
+    if (initialAmount === '0') {
+        return (
+            <View style={styles.container}>
+                <TopBar title="Rent Paid" showBack onBackPress={() => router.back()} />
+                <View style={[styles.successContainer, { backgroundColor: '#F7F7F7' }]}>
+                    <Animated.View entering={FadeInDown.springify()} style={styles.successCard}>
+                        <View style={styles.successIcon}>
+                            <Ionicons name="checkmark-done-circle" size={40} color="#FFF" />
+                        </View>
+                        <Text style={styles.successTitle}>All Settled!</Text>
+                        <Text style={styles.successText}>You have already paid all the money for February 2026. Keep it up!</Text>
+
+                        <TouchableOpacity
+                            style={styles.primaryButton}
+                            onPress={() => router.replace('/tenant/history')}
+                        >
+                            <Text style={styles.primaryButtonText}>View History</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.secondaryButton}
+                            onPress={() => router.replace('/tenant')}
+                        >
+                            <Text style={styles.secondaryButtonText}>Back Home</Text>
+                        </TouchableOpacity>
+                    </Animated.View>
+                </View>
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             <TopBar

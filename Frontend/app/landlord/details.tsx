@@ -26,7 +26,6 @@ export default function PropertyDetails() {
         }
     }, [id, units, occupied]);
 
-    // Modal State
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedUnit, setSelectedUnit] = useState<any>(null);
     const [editTenant, setEditTenant] = useState('');

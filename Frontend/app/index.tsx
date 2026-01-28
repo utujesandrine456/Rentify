@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet, useWindowDimensions, StatusBar } from 're
 import Header from '../components/landing/Header';
 import Hero from '../components/landing/Hero';
 import BentoFeatures from '../components/landing/BentoFeatures';
+import Contact from '../components/landing/Contact';
 import FinalCTA from '../components/landing/FinalCTA';
 import MinimalFooter from '../components/landing/MinimalFooter';
 
@@ -22,6 +23,7 @@ export default function LandingPage() {
             >
                 <Hero />
                 <BentoFeatures />
+                <Contact />
                 <FinalCTA />
                 <MinimalFooter />
             </ScrollView>

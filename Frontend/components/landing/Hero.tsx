@@ -59,7 +59,7 @@ export default function Hero() {
                     <View style={styles.buttonRow}>
                         <TouchableOpacity
                             style={styles.mainBtn}
-                            onPress={() => router.push('/register')}
+                            onPress={() => router.push('/terms')}
                         >
                             <Text style={styles.mainBtnText}>GET STARTED</Text>
                         </TouchableOpacity>

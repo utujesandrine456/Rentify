@@ -30,6 +30,17 @@ export default function AdminDashboard() {
                     </Animated.View>
                 </View>
 
+                <View style={[styles.statsRow, { marginTop: 16 }]}>
+                    <Animated.View entering={FadeInDown.delay(300).duration(600)} style={[styles.statCard, { backgroundColor: '#000' }]}>
+                        <Text style={[styles.statLabel, { color: '#888' }]}>Total Revenue</Text>
+                        <Text style={[styles.statValue, { color: '#FFF' }]}>12.5M RWF</Text>
+                    </Animated.View>
+                    <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.statCard}>
+                        <Text style={styles.statLabel}>Partial Paid</Text>
+                        <Text style={[styles.statValue, { color: '#FFCC00' }]}>45</Text>
+                    </Animated.View>
+                </View>
+
                 <Text style={styles.sectionTitle}>Open Disputes</Text>
 
                 {disputes.map((d) => (

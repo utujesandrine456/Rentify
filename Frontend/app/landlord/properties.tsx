@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import TopBar from '../../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -42,7 +42,10 @@ export default function Properties() {
         <View style={styles.container}>
             <TopBar title="Properties" />
 
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
                 <View style={styles.headerRow}>
                     <Text style={styles.sectionTitle}>My Properties</Text>
                     <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
@@ -93,84 +96,94 @@ export default function Properties() {
 
             {/* Add Property Modal */}
             <Modal visible={modalVisible} animationType="slide" transparent>
-                <View style={styles.modalOverlay}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.modalOverlay}
+                >
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Add New Property</Text>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Property Name</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="e.g. Green Heights"
-                                value={newPropName}
-                                onChangeText={setNewPropName}
-                                placeholderTextColor="#999"
-                            />
-                        </View>
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Location</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="e.g. Kigali, Kicukiro"
-                                value={newPropLoc}
-                                onChangeText={setNewPropLoc}
-                                placeholderTextColor="#999"
-                            />
-                        </View>
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Number of Units</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="e.g. 3"
-                                value={newPropUnits}
-                                onChangeText={setNewPropUnits}
-                                keyboardType="numeric"
-                                placeholderTextColor="#999"
-                            />
-                        </View>
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Monthly Rent (RWF)</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="150000"
-                                value={newPropRent}
-                                onChangeText={setNewPropRent}
-                                keyboardType="numeric"
-                                placeholderTextColor="#999"
-                            />
-                        </View>
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Tenant Phone Number (Optional Linking)</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="+250 78X XXX XXX"
-                                value={newPropPhone}
-                                onChangeText={setNewPropPhone}
-                                keyboardType="phone-pad"
-                                placeholderTextColor="#999"
-                            />
-                        </View>
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Tenant Start Date (YYYY-MM-DD)</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="2026-01-27"
-                                value={newPropStart}
-                                onChangeText={setNewPropStart}
-                                placeholderTextColor="#999"
-                            />
-                        </View>
-
-                        <View style={styles.modalActions}>
-                            <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
-                                <Text style={styles.cancelText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.saveBtn} onPress={handleAddProperty}>
-                                <Text style={styles.saveText}>Save Property</Text>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Add New Property</Text>
+                            <TouchableOpacity onPress={() => setModalVisible(false)}>
+                                <Ionicons name="close" size={24} color="#000" />
                             </TouchableOpacity>
                         </View>
+
+                        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.modalForm}>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Property Name</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="e.g. Green Heights"
+                                    value={newPropName}
+                                    onChangeText={setNewPropName}
+                                    placeholderTextColor="#999"
+                                />
+                            </View>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Location</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="e.g. Kigali, Kicukiro"
+                                    value={newPropLoc}
+                                    onChangeText={setNewPropLoc}
+                                    placeholderTextColor="#999"
+                                />
+                            </View>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Number of Units</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="e.g. 3"
+                                    value={newPropUnits}
+                                    onChangeText={setNewPropUnits}
+                                    keyboardType="numeric"
+                                    placeholderTextColor="#999"
+                                />
+                            </View>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Monthly Rent (RWF)</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="150000"
+                                    value={newPropRent}
+                                    onChangeText={setNewPropRent}
+                                    keyboardType="numeric"
+                                    placeholderTextColor="#999"
+                                />
+                            </View>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Tenant Phone Number (Optional Linking)</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="+250 78X XXX XXX"
+                                    value={newPropPhone}
+                                    onChangeText={setNewPropPhone}
+                                    keyboardType="phone-pad"
+                                    placeholderTextColor="#999"
+                                />
+                            </View>
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Tenant Start Date (YYYY-MM-DD)</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="2026-01-27"
+                                    value={newPropStart}
+                                    onChangeText={setNewPropStart}
+                                    placeholderTextColor="#999"
+                                />
+                            </View>
+
+                            <View style={styles.modalActions}>
+                                <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
+                                    <Text style={styles.cancelText}>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.saveBtn} onPress={handleAddProperty}>
+                                    <Text style={styles.saveText}>Save Property</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </ScrollView>
                     </View>
-                </View>
+                </KeyboardAvoidingView>
             </Modal>
         </View>
     );
@@ -183,6 +196,7 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         padding: 24,
+        paddingBottom: 140,
         gap: 16,
     },
     headerRow: {
@@ -257,7 +271,21 @@ const styles = StyleSheet.create({
         flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'
     },
     modalContent: {
-        backgroundColor: '#FFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, gap: 12,
+        backgroundColor: '#FFF',
+        borderTopLeftRadius: 32,
+        borderTopRightRadius: 32,
+        padding: 24,
+        paddingBottom: 40,
+        maxHeight: '90%',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    modalForm: {
+        gap: 16,
     },
     modalTitle: {
         fontFamily: 'PlusJakartaSans_700Bold',
