@@ -15,7 +15,7 @@ export default function Header() {
             >
                 <View style={styles.logoIcon}>
                     <Image
-                        source={require('../../assets/images/RentifyLogo.png')}
+                        source={require('../../assets/images/RentifyLogo.jpg')}
                         style={styles.logoImage}
                         resizeMode="contain"
                     />
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
         right: 0,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center', // Centered
+        justifyContent: 'center',
         paddingHorizontal: 32,
         paddingTop: 64,
         zIndex: 100,
@@ -44,24 +44,24 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
+        backgroundColor: '#FFF',
+        padding: 8,
+        borderRadius: 8,
     },
     logoIcon: {
-        width: 32,
-        height: 32,
-        backgroundColor: '#FFF',
+        width: 36,
+        height: 36,
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 6,
-        padding: 4,
     },
     logoImage: {
-        width: '100%',
-        height: '100%',
+        width: '160%',
+        height: '160%',
     },
     logoText: {
         fontFamily: 'PlusJakartaSans_800ExtraBold',
         fontSize: 18,
-        color: '#FFF',
+        color: '#000',
         letterSpacing: 1.5,
     }
 });

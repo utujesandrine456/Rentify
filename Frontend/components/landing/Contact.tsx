@@ -32,7 +32,6 @@ export default function Contact() {
                     <Text style={styles.badgeText}>LET'S CONNECT</Text>
                 </View>
                 <Text style={styles.title}>Ready to transform your renting experience?</Text>
-                <Text style={styles.subtitle}>Whether you're a landlord with 100 units or a tenant looking for a home, we're here to help.</Text>
 
                 <View style={styles.inputWrapper}>
                     <TextInput
@@ -45,7 +44,7 @@ export default function Contact() {
                         autoCapitalize="none"
                     />
                     <TouchableOpacity style={styles.sendBtn} onPress={handleEmailSub}>
-                        <Ionicons name="send" size={20} color="#FFF" />
+                        <Ionicons name="send" size={20} color="#000" />
                     </TouchableOpacity>
                 </View>
 
@@ -60,7 +59,7 @@ export default function Contact() {
                         <Ionicons name="call" size={24} color="#000" />
                     </Animated.View>
                     <View style={styles.callContent}>
-                        <Text style={styles.callTitle}>Call Support Now</Text>
+                        <Text style={styles.callTitle}>Call Now</Text>
                         <Text style={styles.callSub}>Get instant help from our experts</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color="#666" />
@@ -90,8 +89,8 @@ const styles = StyleSheet.create({
     },
     glassContainer: {
         backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        borderRadius: 40,
-        padding: 32,
+        borderRadius: 16,
+        padding: 16,
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.1)',
         alignItems: 'center',
@@ -111,10 +110,10 @@ const styles = StyleSheet.create({
     },
     title: {
         fontFamily: 'PlusJakartaSans_800ExtraBold',
-        fontSize: 28,
+        fontSize: 22,
         color: '#FFF',
         textAlign: 'center',
-        lineHeight: 36,
+        lineHeight: 32,
         marginBottom: 16,
     },
     subtitle: {
@@ -129,11 +128,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         width: '100%',
         backgroundColor: 'rgba(255,255,255,0.08)',
-        borderRadius: 20,
+        borderRadius: 16,
         padding: 8,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.1)',
-        marginBottom: 32,
+        marginVertical: 16,
     },
     input: {
         flex: 1,
@@ -173,7 +172,7 @@ const styles = StyleSheet.create({
         width: '100%',
         backgroundColor: '#FFF',
         padding: 20,
-        borderRadius: 24,
+        borderRadius: 16,
         marginBottom: 32,
         gap: 16,
     },

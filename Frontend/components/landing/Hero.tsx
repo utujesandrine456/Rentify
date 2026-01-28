@@ -29,12 +29,12 @@ export default function Hero() {
         <View style={[styles.container, { height }]}>
             <View style={styles.gridOverlay}>
                 <View style={styles.vGrid}>
-                    {[...Array(8)].map((_, i) => (
+                    {[...Array(10)].map((_, i) => (
                         <View key={`v-${i}`} style={styles.vLine} />
                     ))}
                 </View>
                 <View style={styles.hGrid}>
-                    {[...Array(12)].map((_, i) => (
+                    {[...Array(16)].map((_, i) => (
                         <View key={`h-${i}`} style={styles.hLine} />
                     ))}
                 </View>

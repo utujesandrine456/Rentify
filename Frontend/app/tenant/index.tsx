@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 import TopBar from '../../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -14,7 +16,6 @@ export default function TenantHome() {
     const remainingBalance = totalRent - paidAmount;
     const isLate = lateParam === 'true';
 
-    // Status Logic
     let status: 'PENDING' | 'PARTIAL' | 'PAID' | 'RESTRICTED' = 'PENDING';
     if (paidAmount >= totalRent) status = 'PAID';
     else if (paidAmount > 0) status = 'PARTIAL';
@@ -45,7 +46,7 @@ export default function TenantHome() {
                     </Text>
                 </Animated.View>
 
-                {/* Status Pod */}
+
                 <Animated.View entering={FadeInDown.delay(200).duration(800)}>
                     <TouchableOpacity
                         style={[styles.statusPod, isRestricted && styles.restrictedPod]}
@@ -98,17 +99,61 @@ export default function TenantHome() {
                 </Animated.View>
 
                 <Animated.View entering={FadeInDown.delay(400).duration(800)} style={styles.propertySection}>
-                    <Text style={styles.sectionTitle}>Active Residence</Text>
-                    <TouchableOpacity style={styles.propertyCard}>
-                        <View style={styles.propertyIcon}>
-                            <Ionicons name="home" size={20} color="#000" />
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Active Residence</Text>
+                        <TouchableOpacity onPress={() => {/* Navigate to details if needed */ }}>
+                            <Text style={styles.viewMoreText}>View Details</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <TouchableOpacity style={styles.propertyCard} activeOpacity={0.9}>
+                        <Image
+                            source={require('../../assets/images/RentifyLanding.jpg')}
+                            style={styles.propertyImage}
+                        />
+                        <View style={styles.propertyTag}>
+                            <Text style={styles.tagText}>CURRENT HOME</Text>
                         </View>
-                        <View style={styles.propertyMeta}>
-                            <Text style={styles.propertyTitle}>Apartment 4B</Text>
-                            <Text style={styles.propertyAddress}>Kigali, Kicukiro, Niboye</Text>
+                        <View style={styles.propertyOverlay}>
+                            <View style={styles.propertyMeta}>
+                                <Text style={styles.propertyTitle}>Luxury Apartment 4B</Text>
+                                <View style={styles.locationRow}>
+                                    <Ionicons name="location" size={14} color="rgba(255,255,255,0.7)" />
+                                    <Text style={styles.propertyAddress}>Kigali, Kicukiro, Niboye</Text>
+                                </View>
+                            </View>
                         </View>
-                        <Ionicons name="chevron-forward" size={18} color="#CCC" />
                     </TouchableOpacity>
+                </Animated.View>
+
+                {/* Quick Actions */}
+                <Animated.View entering={FadeInDown.delay(500).duration(800)} style={styles.quickActions}>
+                    <Text style={styles.sectionTitle}>Quick Actions</Text>
+                    <View style={styles.actionGrid}>
+                        <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/tenant/explore')}>
+                            <View style={[styles.actionIcon, { backgroundColor: '#F0F7FF' }]}>
+                                <Ionicons name="search" size={24} color="#007AFF" />
+                            </View>
+                            <Text style={styles.actionLabel}>Explore</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/tenant/history')}>
+                            <View style={[styles.actionIcon, { backgroundColor: '#F0FFF4' }]}>
+                                <Ionicons name="time" size={24} color="#34C759" />
+                            </View>
+                            <Text style={styles.actionLabel}>History</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/tenant/pay')}>
+                            <View style={[styles.actionIcon, { backgroundColor: '#FFF9E6' }]}>
+                                <Ionicons name="wallet" size={24} color="#FFCC00" />
+                            </View>
+                            <Text style={styles.actionLabel}>Payments</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.actionItem} onPress={() => router.push('/tenant/profile')}>
+                            <View style={[styles.actionIcon, { backgroundColor: '#FFF5F5' }]}>
+                                <Ionicons name="person" size={24} color="#FF3B30" />
+                            </View>
+                            <Text style={styles.actionLabel}>Profile</Text>
+                        </TouchableOpacity>
+                    </View>
                 </Animated.View>
             </ScrollView>
         </View>
@@ -131,21 +176,21 @@ const styles = StyleSheet.create({
     },
     greetingText: {
         fontFamily: 'PlusJakartaSans_800ExtraBold',
-        fontSize: 28,
+        fontSize: 32,
         color: '#000',
     },
     subGreeting: {
         fontFamily: 'PlusJakartaSans_500Medium',
         fontSize: 16,
         color: '#888',
-        marginTop: 4,
+        marginTop: 6,
     },
     statusPod: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         backgroundColor: '#F9F9F9',
-        padding: 16,
+        padding: 18,
         borderRadius: 20,
         borderWidth: 1,
         borderColor: '#F0F0F0',
@@ -153,12 +198,12 @@ const styles = StyleSheet.create({
     statusLeft: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
+        gap: 12,
     },
     statusIndicator: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
+        width: 10,
+        height: 10,
+        borderRadius: 5,
         backgroundColor: '#4CD964',
     },
     statusLabel: {
@@ -167,33 +212,47 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     statusValue: {
-        fontFamily: 'PlusJakartaSans_700Bold',
+        fontFamily: 'PlusJakartaSans_800ExtraBold',
         fontSize: 14,
         color: '#000',
+        letterSpacing: 0.5,
     },
     card: {
         backgroundColor: '#000',
-        borderRadius: 32,
+        borderRadius: 16,
         padding: 32,
-        gap: 24,
+        gap: 28,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 20 },
+        shadowOpacity: 0.15,
+        shadowRadius: 30,
+        elevation: 10,
     },
     cardInfo: {
-        gap: 8,
+        gap: 12,
+    },
+    cardRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     cardLabel: {
-        fontFamily: 'PlusJakartaSans_500Medium',
+        fontFamily: 'PlusJakartaSans_600SemiBold',
         fontSize: 14,
-        color: 'rgba(255,255,255,0.6)',
+        color: 'rgba(255,255,255,0.5)',
+        letterSpacing: 1,
+        textTransform: 'uppercase',
     },
     amountText: {
         fontFamily: 'PlusJakartaSans_800ExtraBold',
-        fontSize: 36,
+        fontSize: 24,
         color: '#FFF',
     },
     dateText: {
-        fontFamily: 'PlusJakartaSans_600SemiBold',
+        fontFamily: 'PlusJakartaSans_700Bold',
         fontSize: 14,
         color: '#FF3B30',
+        marginTop: 4,
     },
     buttonRow: {
         flexDirection: 'row',
@@ -201,7 +260,7 @@ const styles = StyleSheet.create({
     actionButton: {
         flex: 1,
         paddingVertical: 18,
-        borderRadius: 16,
+        borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -209,52 +268,82 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF',
     },
     payButtonText: {
-        fontFamily: 'PlusJakartaSans_700Bold',
+        fontFamily: 'PlusJakartaSans_800ExtraBold',
         color: '#000',
         fontSize: 15,
     },
-    sectionTitle: {
-        fontFamily: 'PlusJakartaSans_700Bold',
-        fontSize: 18,
-        color: '#000',
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: 16,
+    },
+    sectionTitle: {
+        fontFamily: 'PlusJakartaSans_800ExtraBold',
+        fontSize: 20,
+        color: '#000',
+    },
+    viewMoreText: {
+        fontFamily: 'PlusJakartaSans_700Bold',
+        fontSize: 14,
+        color: '#000',
+        textDecorationLine: 'underline',
     },
     propertySection: {
         marginTop: 8,
     },
     propertyCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#FAFAFA',
-        padding: 20,
-        borderRadius: 24,
-        gap: 16,
-        borderWidth: 1,
-        borderColor: '#F0F0F0',
+        height: 240,
+        borderRadius: 32,
+        overflow: 'hidden',
+        position: 'relative',
     },
-    propertyIcon: {
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        backgroundColor: '#FFF',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: '#EEE',
+    propertyImage: {
+        width: '100%',
+        height: '100%',
+    },
+    propertyOverlay: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        padding: 24,
+        paddingTop: 48,
+    },
+    propertyTag: {
+        position: 'absolute',
+        top: 16,
+        left: 16,
+        backgroundColor: '#4CD964',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+        zIndex: 10,
+    },
+    tagText: {
+        color: '#FFF',
+        fontSize: 10,
+        fontFamily: 'PlusJakartaSans_800ExtraBold',
+        letterSpacing: 1,
     },
     propertyMeta: {
-        flex: 1,
+        gap: 6,
     },
     propertyTitle: {
-        fontFamily: 'PlusJakartaSans_700Bold',
-        fontSize: 16,
-        color: '#000',
+        fontFamily: 'PlusJakartaSans_800ExtraBold',
+        fontSize: 22,
+        color: '#FFF',
+    },
+    locationRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
     },
     propertyAddress: {
         fontFamily: 'PlusJakartaSans_500Medium',
-        fontSize: 13,
-        color: '#888',
-        marginTop: 2,
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.7)',
     },
     restrictedPod: {
         borderColor: '#FF3B30',
@@ -265,25 +354,51 @@ const styles = StyleSheet.create({
         borderColor: '#FF3B30',
         borderWidth: 1,
     },
-    cardRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
     progressText: {
         fontFamily: 'PlusJakartaSans_700Bold',
         fontSize: 12,
         color: '#4CD964',
     },
     progressBarContainer: {
-        height: 6,
+        height: 8,
         backgroundColor: 'rgba(255,255,255,0.1)',
-        borderRadius: 3,
+        borderRadius: 4,
         marginTop: 12,
         overflow: 'hidden',
     },
     progressBar: {
         height: '100%',
-        borderRadius: 3,
+        borderRadius: 4,
+    },
+    quickActions: {
+        marginTop: 8,
+    },
+    actionGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginTop: 20,
+        gap: 16,
+    },
+    actionItem: {
+        width: (width - 48 - 16) / 2, // 2 columns
+        backgroundColor: '#FAFAFA',
+        padding: 24,
+        borderRadius: 24,
+        alignItems: 'center',
+        gap: 12,
+        borderWidth: 1,
+        borderColor: '#F0F0F0',
+    },
+    actionIcon: {
+        width: 56,
+        height: 56,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    actionLabel: {
+        fontFamily: 'PlusJakartaSans_700Bold',
+        fontSize: 14,
+        color: '#000',
     }
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, StatusBar, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -50,34 +50,29 @@ export default function TenantPublicProfile() {
                     <Text style={styles.joined}>Member since {tenantData.joinedDate}</Text>
 
                     <View style={styles.reliabilityContainer}>
-                        <Text style={styles.reliabilityLabel}>Reliability Score</Text>
+                        <Text style={styles.reliabilityLabel}>Tenant Trust Score</Text>
                         <Text style={styles.reliabilityValue}>{tenantData.reliabilityScore}</Text>
                         <View style={styles.progressBar}>
                             <View style={[styles.progressFill, { width: '98%' }]} />
                         </View>
-                        <Text style={styles.reliabilityDesc}>Based on 24 consecutive on-time payments.</Text>
+                        <Text style={styles.reliabilityDesc}>Excellent reliability based on past rent history.</Text>
                     </View>
                 </Animated.View>
 
-                <Animated.View entering={FadeInDown.delay(200).duration(800)} style={styles.historySection}>
-                    <Text style={styles.sectionTitle}>Rent Payment History</Text>
-                    {tenantData.rentHistory.map((item, index) => (
-                        <View key={item.id} style={styles.historyItem}>
-                            <View style={styles.historyIcon}>
-                                <Ionicons name="calendar-outline" size={20} color="#000" />
-                            </View>
-                            <View style={styles.historyInfo}>
-                                <Text style={styles.historyMonth}>{item.month}</Text>
-                                <Text style={styles.historyAmount}>RWF {item.amount}</Text>
-                            </View>
-                            <View style={styles.onTimeBadge}>
-                                <Text style={styles.onTimeText}>{item.status}</Text>
-                            </View>
+                <Animated.View entering={FadeInDown.delay(200).duration(800)} style={styles.contactSection}>
+                    <Text style={styles.sectionTitle}>Contact Information</Text>
+                    <View style={styles.contactCard}>
+                        <View style={styles.contactItem}>
+                            <Ionicons name="call-outline" size={20} color="#000" />
+                            <Text style={styles.contactText}>{tenantData.contact}</Text>
                         </View>
-                    ))}
+                    </View>
                 </Animated.View>
 
-                <TouchableOpacity style={styles.contactBtn}>
+                <TouchableOpacity
+                    style={styles.contactBtn}
+                    onPress={() => Linking.openURL(`tel:${tenantData.contact}`)}
+                >
                     <Ionicons name="call" size={20} color="#FFF" />
                     <Text style={styles.contactBtnText}>Contact This Tenant</Text>
                 </TouchableOpacity>
@@ -90,6 +85,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F8F9FB',
+        paddingBottom: 48,
     },
     header: {
         flexDirection: 'row',
@@ -221,7 +217,7 @@ const styles = StyleSheet.create({
         color: '#888',
         textAlign: 'center',
     },
-    historySection: {
+    contactSection: {
         marginBottom: 32,
     },
     sectionTitle: {
@@ -230,46 +226,22 @@ const styles = StyleSheet.create({
         color: '#000',
         marginBottom: 16,
     },
-    historyItem: {
+    contactCard: {
+        backgroundColor: '#FFF',
+        padding: 24,
+        borderRadius: 24,
+        borderWidth: 1,
+        borderColor: '#F0F0F0',
+    },
+    contactItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFF',
-        padding: 16,
-        borderRadius: 20,
-        marginBottom: 12,
+        gap: 12,
     },
-    historyIcon: {
-        width: 44,
-        height: 44,
-        borderRadius: 12,
-        backgroundColor: '#F8F9FB',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 16,
-    },
-    historyInfo: {
-        flex: 1,
-    },
-    historyMonth: {
-        fontFamily: 'PlusJakartaSans_600SemiBold',
-        fontSize: 15,
-        color: '#000',
-    },
-    historyAmount: {
-        fontFamily: 'PlusJakartaSans_500Medium',
-        fontSize: 13,
-        color: '#666',
-    },
-    onTimeBadge: {
-        backgroundColor: '#E8FAEF',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 12,
-    },
-    onTimeText: {
+    contactText: {
         fontFamily: 'PlusJakartaSans_700Bold',
-        fontSize: 11,
-        color: '#4CD964',
+        fontSize: 16,
+        color: '#000',
     },
     contactBtn: {
         backgroundColor: '#000',

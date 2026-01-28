@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     card: {
         backgroundColor: '#FFF',
         padding: 48,
-        borderRadius: 4,
+        borderRadius: 16,
         alignItems: 'center',
     },
     title: {

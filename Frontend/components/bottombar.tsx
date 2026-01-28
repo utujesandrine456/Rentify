@@ -19,12 +19,14 @@ export default function BottomBar({
 
     const tabs = role === 'tenant' ? [
         { name: 'Home', icon: 'home-outline', activeIcon: 'home', path: '/tenant' },
+        { name: 'Explore', icon: 'search-outline', activeIcon: 'search', path: '/tenant/explore' },
         { name: 'Pay', icon: 'wallet-outline', activeIcon: 'wallet', path: '/tenant/pay' },
         { name: 'History', icon: 'time-outline', activeIcon: 'time', path: '/tenant/history' },
         { name: 'Profile', icon: 'person-outline', activeIcon: 'person', path: '/tenant/profile' },
     ] : [
         { name: 'Overview', icon: 'grid-outline', activeIcon: 'grid', path: '/landlord' },
         { name: 'Tenants', icon: 'people-outline', activeIcon: 'people', path: '/landlord/tenants' },
+        { name: 'Search', icon: 'search-outline', activeIcon: 'search', path: '/landlord/search' },
         { name: 'Properties', icon: 'business-outline', activeIcon: 'business', path: '/landlord/properties' },
         { name: 'Profile', icon: 'person-outline', activeIcon: 'person', path: '/landlord/profile' },
     ];
@@ -41,7 +43,8 @@ export default function BottomBar({
                             onPress={() => {
                                 if (onTabPress) {
                                     // Normalize: convert 'payments' to 'pay' if necessary, or pass original
-                                    const target = tab.name === 'Pay' ? 'payments' : tab.name.toLowerCase();
+                                    let target = tab.name.toLowerCase();
+                                    if (tab.name === 'Pay') target = 'pay';
                                     onTabPress(target);
                                 } else {
                                     router.push(tab.path as any);

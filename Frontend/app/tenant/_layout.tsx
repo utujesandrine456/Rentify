@@ -9,9 +9,10 @@ export default function TenantLayout() {
             tabBar={(props) => {
                 const routeName = props.state.routes[props.state.index].name;
 
-                let activeTab: 'home' | 'payments' | 'history' | 'profile' | 'properties' | 'tenants' = 'home';
+                let activeTab: 'home' | 'explore' | 'payments' | 'history' | 'profile' | 'properties' | 'tenants' = 'home';
 
                 if (routeName === 'index') activeTab = 'home';
+                else if (routeName === 'explore') activeTab = 'explore';
                 else if (routeName === 'pay') activeTab = 'payments';
                 else if (routeName === 'history') activeTab = 'history';
                 else if (routeName === 'profile') activeTab = 'profile';
@@ -22,7 +23,8 @@ export default function TenantLayout() {
                         activeTab={activeTab as any}
                         onTabPress={(tab) => {
                             if (tab === 'home') props.navigation.navigate('index');
-                            else if (tab === 'payments') props.navigation.navigate('pay');
+                            else if (tab === 'explore') props.navigation.navigate('explore');
+                            else if (tab === 'pay') props.navigation.navigate('pay');
                             else if (tab === 'history') props.navigation.navigate('history');
                             else if (tab === 'profile') props.navigation.navigate('profile');
                         }}
@@ -31,6 +33,7 @@ export default function TenantLayout() {
             }}
         >
             <Tabs.Screen name="index" />
+            <Tabs.Screen name="explore" />
             <Tabs.Screen name="pay" />
             <Tabs.Screen name="history" />
             <Tabs.Screen name="profile" />

@@ -24,7 +24,7 @@ export default function Settings() {
         {
             title: 'Account',
             items: [
-                { icon: 'person-outline', label: 'Edit Profile', route: '/profile' },
+                { icon: 'person-outline', label: 'Edit Profile', route: '/tenant/profile' },
                 { icon: 'shield-checkmark-outline', label: 'Security', route: '/security' },
                 { icon: 'notifications-outline', label: 'Notifications', route: '/notifications' }
             ]
@@ -64,7 +64,10 @@ export default function Settings() {
                         <View style={styles.card}>
                             {section.items.map((item, iIndex) => (
                                 <View key={item.label}>
-                                    <TouchableOpacity style={styles.item}>
+                                    <TouchableOpacity
+                                        style={styles.item}
+                                        onPress={() => item.route && router.push(item.route as any)}
+                                    >
                                         <View style={styles.itemLeft}>
                                             <View style={styles.iconBox}>
                                                 <Ionicons name={item.icon as any} size={20} color="#000" />

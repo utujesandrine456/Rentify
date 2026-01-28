@@ -43,7 +43,7 @@ export default function Login() {
 
                     <Animated.View entering={FadeInUp.delay(300).duration(800)} style={styles.heroTextContainer}>
                         <Image
-                            source={require('../assets/images/RentifyLogo.png')}
+                            source={require('../assets/images/RentifyLogo.jpg')}
                             style={styles.logo}
                             resizeMode="contain"
                         />
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
         gap: 24,
         borderTopLeftRadius: 48,
         borderTopRightRadius: 48,
-        marginTop: -42,   
+        marginTop: -42,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -4 },
         shadowOpacity: 0.08,

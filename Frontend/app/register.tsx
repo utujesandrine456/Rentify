@@ -57,7 +57,7 @@ export default function Register() {
 
                     <Animated.View entering={FadeInUp.delay(300).duration(800)} style={styles.heroTextContainer}>
                         <Image
-                            source={require('../assets/images/RentifyLogo.png')}
+                            source={require('../assets/images/RentifyLogo.jpg')}
                             style={styles.logo}
                             resizeMode="contain"
                         />

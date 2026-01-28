@@ -4,7 +4,7 @@
     "slug": "Rentify",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/RentifyLogo.png",
+    "icon": "./assets/images/RentifyLogo.jpg",
     "scheme": "Rentify",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,25 +13,25 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/RentifyLogo.png",
-        "backgroundImage": "./assets/images/RentifyLogo.png",
-        "monochromeImage": "./assets/images/RentifyLogo.png"
+        "foregroundImage": "./assets/images/RentifyLogo.jpg",
+        "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/RentifyLogo.png"
+      "favicon": "./assets/images/RentifyLogo.jpg"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/RentifyLogo.png",
-          "imageWidth": 200,
-          "resizeMode": "contain"
+          "image": "./assets/images/RentifyLogo.jpg",
+          "imageWidth": 250,
+          "resizeMode": "contain",
+          "backgroundColor": "#000000"
         }
       ],
       "expo-font"
