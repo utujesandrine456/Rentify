@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     avatar: {
         width: 110,
         height: 110,
-        borderRadius: 55,
+        borderRadius: 54,
         backgroundColor: '#F0F0F0',
         alignItems: 'center',
         justifyContent: 'center',
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#E8F5E9',
         paddingHorizontal: 12,
         paddingVertical: 6,
-        borderRadius: 20,
+        borderRadius: 12,
         marginTop: 10,
     },
     badgeText: {
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     },
     infoBox: {
         backgroundColor: '#F9F9F9',
-        borderRadius: 24,
+        borderRadius: 16,
         padding: 24,
         borderWidth: 1,
         borderColor: '#F0F0F0',
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         gap: 12,
         paddingVertical: 20,
-        borderRadius: 24,
+        borderRadius: 16,
         backgroundColor: '#FFF1F0',
     },
     logoutText: {
