@@ -30,9 +30,6 @@ export default function TenantPublicProfile() {
                     <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Tenant Public Profile</Text>
-                <TouchableOpacity style={styles.shareBtn}>
-                    <Ionicons name="share-outline" size={24} color="#000" />
-                </TouchableOpacity>
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

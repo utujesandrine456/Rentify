@@ -123,8 +123,8 @@ export const translations = {
     },
     rw: {
         welcome: "Murakaza neza",
-        tenant_dashboard: "Imicungire y'Ubukode",
-        landlord_dashboard: "Imicungire y'Inzu",
+        tenant_dashboard: "Umupangayi",
+        landlord_dashboard: "Nyir' inzu",
         rent_status: "Imiterere y'Ubukode",
         next_payment: "Ukwishyura Gutaha",
         balance_due: "Ikirarane",
