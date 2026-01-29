@@ -20,7 +20,7 @@ export default function Notifications() {
         {
             id: 2,
             title: 'Payment Confirmed',
-            message: 'Your payment of RWF 150,000 for January has been processed.',
+            message: 'Your payment of 150,000 Frw for January has been processed.',
             time: '1 day ago',
             type: 'success',
             icon: 'checkmark-circle'
@@ -82,10 +82,10 @@ const styles = StyleSheet.create({
     },
     notifCard: {
         flexDirection: 'row',
-        padding: 20,
+        padding: 16,
         backgroundColor: '#FAFAFA',
         borderRadius: 20,
-        gap: 16,
+        gap: 8,
         borderWidth: 1,
         borderColor: '#F0F0F0',
     },
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-        gap: 4,
+        gap: 2,
     },
     header: {
         flexDirection: 'row',
@@ -117,8 +117,8 @@ const styles = StyleSheet.create({
     },
     notifMessage: {
         fontFamily: 'PlusJakartaSans_500Medium',
-        fontSize: 13,
+        fontSize: 12,
         color: '#666',
-        lineHeight: 18,
+        lineHeight: 24,
     }
 });
