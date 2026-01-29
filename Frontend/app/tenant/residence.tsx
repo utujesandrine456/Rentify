@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Dimensions, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
@@ -21,7 +21,6 @@ export default function ResidenceDetails() {
         landlord: {
             name: 'John Mugisha',
             phone: '+250 788 000 000',
-            avatar: 'J'
         },
         features: [
             { icon: 'bed-outline', label: '2 Bedrooms' },
@@ -32,6 +31,9 @@ export default function ResidenceDetails() {
         ]
     };
 
+    function handleCall(){
+        Linking.openURL(`tel:${houseDetails.landlord.phone}`);
+    }
     return (
         <View style={styles.container}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -66,7 +68,7 @@ export default function ResidenceDetails() {
                     <Animated.View entering={FadeInDown.delay(300).duration(800)} style={styles.priceCard}>
                         <View>
                             <Text style={styles.priceLabel}>{t('monthly_rent')}</Text>
-                            <Text style={styles.priceValue}>RWF {houseDetails.price}</Text>
+                            <Text style={styles.priceValue}>{houseDetails.price} Frw</Text>
                         </View>
                         <View style={styles.paidBadge}>
                             <Ionicons name="checkmark-circle" size={16} color="#4CD964" />
@@ -96,15 +98,12 @@ export default function ResidenceDetails() {
                     <View style={styles.landlordSection}>
                         <Text style={styles.sectionTitle}>{t('landlord')}</Text>
                         <View style={styles.landlordCard}>
-                            <View style={styles.avatar}>
-                                <Text style={styles.avatarText}>{houseDetails.landlord.avatar}</Text>
-                            </View>
                             <View style={styles.landlordInfo}>
                                 <Text style={styles.landlordName}>{houseDetails.landlord.name}</Text>
                                 <Text style={styles.landlordRole}>{t('verified_landlord')}</Text>
                             </View>
-                            <TouchableOpacity style={styles.contactBtn}>
-                                <Ionicons name="chatbubble-ellipses-outline" size={24} color="#000" />
+                            <TouchableOpacity style={styles.contactBtn} onPress={() => { handleCall() }}>
+                                <Ionicons name="call-outline" size={24} color="#000" />
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -185,7 +184,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontFamily: 'PlusJakartaSans_800ExtraBold',
-        fontSize: 28,
+        fontSize: 24,
         color: '#000',
     },
     locationRow: {
@@ -217,7 +216,7 @@ const styles = StyleSheet.create({
     },
     priceValue: {
         fontFamily: 'PlusJakartaSans_800ExtraBold',
-        fontSize: 24,
+        fontSize: 18,
         color: '#000',
         marginTop: 4,
     },
