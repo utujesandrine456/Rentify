@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     },
     card: {
         backgroundColor: '#FAFAFA',
-        borderRadius: 24,
+        borderRadius: 16,
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: '#F0F0F0',
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     logoutBtn: {
         padding: 18,
         backgroundColor: '#FFF1F0',
-        borderRadius: 16,
+        borderRadius: 12,
         alignItems: 'center',
     },
     logoutText: {
