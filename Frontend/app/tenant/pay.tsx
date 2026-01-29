@@ -113,10 +113,10 @@ export default function PayRent() {
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.billCard}>
                     <Text style={styles.label}>{isReturningForBalance ? t('remaining_balance') : t('total_amount_due')}</Text>
-                    <Text style={styles.amount}>RWF {parseInt(initialAmount).toLocaleString()}</Text>
+                    <Text style={styles.amount}>{parseInt(initialAmount).toLocaleString()} Frw</Text>
                     {isReturningForBalance && (
                         <View style={styles.prevPaymentRow}>
-                            <Text style={styles.prevLabel}>{t('previously_paid')}: RWF {prevPaid.toLocaleString()}</Text>
+                            <Text style={styles.prevLabel}>{t('previously_paid')}: {prevPaid.toLocaleString()} Frw</Text>
                         </View>
                     )}
                     <View style={styles.row}>
@@ -153,7 +153,7 @@ export default function PayRent() {
 
                 {paymentType === 'partial' && (
                     <Animated.View entering={FadeInDown} style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>{t('enter_amount')} (RWF)</Text>
+                        <Text style={styles.inputLabel}>{t('enter_amount')} (Frw)</Text>
                         <TextInput
                             style={styles.textInput}
                             value={customAmount}
