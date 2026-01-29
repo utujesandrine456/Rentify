@@ -152,14 +152,16 @@ const styles = StyleSheet.create({
     },
     greetingText: {
         fontFamily: 'PlusJakartaSans_800ExtraBold',
-        fontSize: 32,
+        fontSize: 28,
         color: '#000',
+        textAlign: 'center',
     },
     subGreeting: {
         fontFamily: 'PlusJakartaSans_500Medium',
         fontSize: 16,
         color: '#888',
         marginTop: 6,
+        textAlign: 'center'
     },
     statusPod: {
         flexDirection: 'row',
