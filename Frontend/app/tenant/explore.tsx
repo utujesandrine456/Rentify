@@ -95,7 +95,7 @@ export default function Explore() {
                     <View style={styles.priceRow}>
                         <Text style={styles.priceLabel}>{t('price')}</Text>
                         <Text style={styles.priceValue}>
-                            RWF {item.price.toLocaleString()}
+                            {item.price.toLocaleString()} Frw
                             {item.type === 'cars' ? ' / day' : ''}
                         </Text>
                     </View>
