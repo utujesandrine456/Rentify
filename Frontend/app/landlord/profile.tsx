@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#1ec20fff',
         paddingHorizontal: 16,
         paddingVertical: 8,
-        borderRadius: 20,
+        borderRadius: 16,
         marginTop: 12,
     },
     badgeText: {
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     },
     infoBox: {
         backgroundColor: '#F9F9F9',
-        borderRadius: 24,
+        borderRadius: 16,
         padding: 24,
         borderWidth: 1,
         borderColor: '#F0F0F0',
