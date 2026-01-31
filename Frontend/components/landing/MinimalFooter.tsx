@@ -7,7 +7,7 @@ export default function MinimalFooter() {
     return (
         <View style={styles.container}>
             <View style={styles.row}>
-                <Text style={styles.logo}>RENTIFY</Text>
+                <Text style={styles.logo}>TUZA</Text>
                 <View style={styles.links}>
                     <Text style={styles.link}>{t('privacy_policy').toUpperCase()}</Text>
                     <Text style={styles.link}>{t('contact_us').toUpperCase()}</Text>
@@ -15,7 +15,7 @@ export default function MinimalFooter() {
             </View>
             <View style={styles.divider} />
             <Text style={styles.copyright}>
-                © 2026 RENTIFY. {t('all_settled').toUpperCase()}
+                © 2026 TUZA. {t('all_settled').toUpperCase()}
             </Text>
         </View>
     );
