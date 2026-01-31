@@ -23,7 +23,7 @@ export default function Header() {
                         resizeMode="contain"
                     />
                 </View>
-                <Text style={styles.logoText}>RENTIFY</Text>
+                <Text style={styles.logoText}>TUZA</Text>
             </TouchableOpacity>
 
             <View style={styles.langContainer}>
