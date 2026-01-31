@@ -25,7 +25,7 @@ export default function TermsAndConditions() {
 
                     <Text style={styles.sectionTitle}>1. Acceptance of Terms</Text>
                     <Text style={styles.text}>
-                        By creating an account on Rentify, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our services.
+                        By creating an account on TUZA, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our services.
                     </Text>
 
                     <Text style={styles.sectionTitle}>2. User Responsibilities</Text>
@@ -35,7 +35,7 @@ export default function TermsAndConditions() {
 
                     <Text style={styles.sectionTitle}>3. Payments and Fees</Text>
                     <Text style={styles.text}>
-                        Rentify facilitates rent payments via mobile money. We are not responsible for disputes between landlords and tenants regarding rent amounts or property conditions.
+                        TUZA facilitates rent payments via mobile money. We are not responsible for disputes between landlords and tenants regarding rent amounts or property conditions.
                     </Text>
 
                     <Text style={styles.sectionTitle}>4. Privacy Policy</Text>
