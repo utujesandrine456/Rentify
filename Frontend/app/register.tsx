@@ -5,8 +5,9 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../context/LanguageContext';
+import { apiRequest } from '@/utils/api';
+import AsyncStorage from '@react-native-async-storage/async-storage/lib/typescript/AsyncStorage';
 
-const { width } = Dimensions.get('window');
 
 export default function Register() {
     const router = useRouter();
@@ -16,20 +17,61 @@ export default function Register() {
     const [role, setRole] = useState<'tenant' | 'landlord'>(params.role === 'landlord' ? 'landlord' : 'tenant');
     const [step, setStep] = useState(1);
     const [phone, setPhone] = useState('');
+    const [name, setName] = useState('');
     const [password, setPassword] = useState('');
     const [otp, setOtp] = useState('');
+    const[showpassword,setShowpassword]=useState(false);
+    
 
-    const handleRegister = () => {
-        if (phone && password) {
-            setStep(2);
+    const handleRegister = async() => {
+        if(!name || !phone || !password){
+            alert("Please fill all fields");
+            return;
         }
-    };
 
-    const verifyOtp = () => {
-        if (otp === '1234') {
-            router.replace(role === 'tenant' ? '/tenant' : '/landlord');
-        } else {
-            alert('Invalid OTP (Use 1234)');
+        if(password.length < 6){
+            alert("Password must be at least 6 characters");
+            return;
+        }
+
+        try{
+            await apiRequest('/api/v1/auth/register', "POST", {
+                fullName: name,
+                telephone: phone,
+                password: password,
+                role: role.toUpperCase(),
+            });
+            
+            console.log("Registration successful");
+            setStep(2);
+        }catch(error: any){
+            alert(error.message || "Registration failed");
+        }
+    }
+
+    const verifyOtp = async () => {
+        if(!otp){
+            alert("Please enter the OTP code");
+            return;
+        }
+
+        try{
+            const response = await apiRequest('/api/v1/auth/verify-registration', "POST", {
+                fullName: name,           
+                telephone: phone,      
+                password: password,      
+                role: role.toUpperCase(), 
+                otp: otp,
+            });
+
+            const { token, role: userRole } = response;
+
+            await AsyncStorage.setItem("token", token);
+            await AsyncStorage.setItem("role", userRole);
+        
+            router.replace(userRole == "TENANT" ? "/tenant" : "/landlord");
+        } catch(error: any){
+            alert(error.message || "OTP verification failed");
         }
     };
 
@@ -93,10 +135,21 @@ export default function Register() {
                         </View>
 
                         <View style={styles.inputContainer}>
+                            <Text style={styles.label}>{t('user_prompt')}</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="John Doe"
+                                placeholderTextColor="#999"
+                                value={name}
+                                onChangeText={setName}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
                             <Text style={styles.label}>{t('phone_prompt')}</Text>
                             <TextInput
                                 style={styles.input}
-                                placeholder="+250 7..."
+                                placeholder="07..."
                                 placeholderTextColor="#999"
                                 keyboardType="phone-pad"
                                 value={phone}
@@ -105,15 +158,19 @@ export default function Register() {
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>{t('password_label')}</Text>
+                            <Text style={[styles.label, { flex: 1 }]}>{t('password_label')}</Text>
                             <TextInput
                                 style={styles.input}
                                 placeholder="••••••••"
                                 placeholderTextColor="#999"
-                                secureTextEntry
+                                secureTextEntry = {!showpassword}
                                 value={password}
                                 onChangeText={setPassword}
                             />
+
+                            <TouchableOpacity onPress={() => setShowpassword(!showpassword)} style={{ position: 'absolute', right: 16, top: 40 }}>
+                                <Ionicons name={showpassword ? "eye-off" : "eye"} size={24} color="#bbb" style={{}} />
+                            </TouchableOpacity>
                         </View>
 
                         <Text style={styles.termsText}>
@@ -135,10 +192,10 @@ export default function Register() {
                             <Text style={styles.label}>OTP Code</Text>
                             <TextInput
                                 style={[styles.input, { textAlign: 'center', letterSpacing: 8, fontSize: 24 }]}
-                                placeholder="0000"
+                                placeholder="000000"
                                 placeholderTextColor="#DDD"
                                 keyboardType="number-pad"
-                                maxLength={4}
+                                maxLength={6}
                                 value={otp}
                                 onChangeText={setOtp}
                                 autoFocus
