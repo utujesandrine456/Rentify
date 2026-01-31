@@ -12,7 +12,7 @@ export default function Profile() {
     const [userData, setUserData] = useState({
         name: 'Tony Manero',
         phone: '+250 788 123 456',
-        email: 'tony.m@rentify.com'
+        email: 'tony.m@tuza.com'
     });
 
     const [tempData, setTempData] = useState({ ...userData });
