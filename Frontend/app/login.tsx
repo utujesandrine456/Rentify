@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import Animated, {FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../context/LanguageContext';
+import { apiRequest } from '@/utils/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const { width } = Dimensions.get('window');
 
 export default function Login() {
     const router = useRouter();
@@ -14,9 +15,32 @@ export default function Login() {
     const { t } = useLanguage();
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
+    const [showpassword, setShowpassword] = useState(false);
 
-    const handleLogin = () => {
-        router.replace('/tenant');
+    
+    const handleLogin = async() => {
+        if(!phone || !password){
+            alert("Please fill in all fields");
+            return;
+        }
+
+        try{
+            const response = await apiRequest('/api/v1/auth/login', "POST", {
+                telephone: phone,
+                password: password
+            });
+
+            const {token, role} = response;
+
+            await AsyncStorage.setItem("token", token);
+            await AsyncStorage.setItem("role", role);
+
+            router.replace(role == "TENANT" ? '/tenant' : '/landlord');
+            
+        }catch(error: any){
+            alert(error.message || "Login failed");
+            return;
+        }
     };
 
     return (
@@ -24,7 +48,6 @@ export default function Login() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
-
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
@@ -59,7 +82,7 @@ export default function Login() {
                         <Text style={styles.label}>{t('phone_prompt')}</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="+250 7..."
+                            placeholder="07..."
                             placeholderTextColor="#999"
                             keyboardType="phone-pad"
                             value={phone}
@@ -68,15 +91,19 @@ export default function Login() {
                     </View>
 
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>{t('password_label')}</Text>
+                        <Text style={[styles.label, { flex: 1 }]}>{t('password_label')}</Text>
                         <TextInput
                             style={styles.input}
                             placeholder="••••••••"
                             placeholderTextColor="#999"
-                            secureTextEntry
+                            secureTextEntry = {!showpassword}
                             value={password}
                             onChangeText={setPassword}
                         />
+
+                        <TouchableOpacity onPress={() => setShowpassword(!showpassword)} style={{ position: 'absolute', right: 16, top: 40 }}>
+                            <Ionicons name={showpassword ? "eye-off" : "eye"} size={24} color="#bbb" style={{}} />
+                        </TouchableOpacity>
                     </View>
 
                     <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
