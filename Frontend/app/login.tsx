@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, {FadeInUp } from 'react-native-reanimated';
+import Animated, {FadeInUp, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../context/LanguageContext';
 import { apiRequest } from '@/utils/api';
@@ -13,9 +13,12 @@ export default function Login() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { t } = useLanguage();
+    const [step, setStep] = useState(1); // 1 = login form, 2 = OTP verification
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
+    const [otp, setOtp] = useState('');
     const [showpassword, setShowpassword] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     
     const handleLogin = async() => {
@@ -24,6 +27,7 @@ export default function Login() {
             return;
         }
 
+        setLoading(true);
         try{
             const response = await apiRequest('/auth/login', "POST", {
                 telephone: phone,
@@ -39,12 +43,69 @@ export default function Login() {
             if (fullName) await AsyncStorage.setItem("fullName", fullName);
             if (telephone) await AsyncStorage.setItem("telephone", telephone);
 
-            console.log('[LOGIN] ✅ User data stored:', { fullName, telephone, userId, role });
+        
             router.replace(role == "TENANT" ? '/tenant' : '/landlord');
             
         }catch(error: any){
-            alert(error.message || "Login failed");
+            const errorMessage = error.message || "Login failed";
+            
+            if (errorMessage.includes("Phone number not verified") || errorMessage.includes("not verified")) {
+                try {
+                    const otpResponse = await apiRequest('/auth/send-otp', "POST", {
+                        telephone: phone
+                    });
+                    
+                    console.log('[LOGIN] OTP sent:', otpResponse);
+                    setStep(2); 
+                } catch (otpError: any) {
+                    console.error('[LOGIN] Failed to send OTP:', otpError);
+                    alert("Failed to send verification code: " + (otpError.message || "Please try again."));
+                }
+            } else {
+                alert(errorMessage);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if(!otp || otp.length !== 6){
+            alert("Please enter a valid 6-digit OTP code");
             return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await apiRequest('/auth/verify-otp', "POST", {
+                telephone: phone,
+                otp: otp
+            });
+
+            const { token, role, userId, fullName, telephone } = response;
+
+            await AsyncStorage.setItem("token", token);
+            await AsyncStorage.setItem("role", role);
+            if (userId) await AsyncStorage.setItem("userId", userId.toString());
+            if (fullName) await AsyncStorage.setItem("fullName", fullName);
+            if (telephone) await AsyncStorage.setItem("telephone", telephone);
+
+            router.replace(role == "TENANT" ? '/tenant' : '/landlord');
+        } catch (error: any) {
+            alert(error.message || "OTP verification failed");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        try {
+            await apiRequest('/auth/send-otp', "POST", {
+                telephone: phone
+            });
+            alert("OTP code has been resent to your phone");
+        } catch (error: any) {
+            alert(error.message || "Failed to resend OTP");
         }
     };
 
@@ -77,48 +138,100 @@ export default function Login() {
                             style={styles.logo}
                             resizeMode="contain"
                         />
-                        <Text style={styles.heroTitle}>{t('login_title')}</Text>
-                        <Text style={styles.heroSubtitle}>{t('login_subtitle')}</Text>
+                        <Text style={styles.heroTitle}>
+                            {step === 1 ? t('login_title') : 'Verify Phone Number'}
+                        </Text>
                     </Animated.View>
                 </View>
 
                 <View style={styles.form}>
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>{t('phone_prompt')}</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="07..."
-                            placeholderTextColor="#999"
-                            keyboardType="phone-pad"
-                            value={phone}
-                            onChangeText={setPhone}
-                        />
-                    </View>
+                    {step === 1 ? (
+                        <Animated.View entering={FadeInUp.delay(200).duration(800)}>
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>{t('phone_prompt')}</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="07..."
+                                    placeholderTextColor="#999"
+                                    keyboardType="phone-pad"
+                                    value={phone}
+                                    onChangeText={setPhone}
+                                />
+                            </View>
 
-                    <View style={styles.inputContainer}>
-                        <Text style={[styles.label, { flex: 1 }]}>{t('password_label')}</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="••••••••"
-                            placeholderTextColor="#999"
-                            secureTextEntry = {!showpassword}
-                            value={password}
-                            onChangeText={setPassword}
-                        />
+                            <View style={styles.inputContainer}>
+                                <Text style={[styles.label, { flex: 1 }]}>{t('password_label')}</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="••••••••"
+                                    placeholderTextColor="#999"
+                                    secureTextEntry = {!showpassword}
+                                    value={password}
+                                    onChangeText={setPassword}
+                                />
 
-                        <TouchableOpacity onPress={() => setShowpassword(!showpassword)} style={{ position: 'absolute', right: 16, top: 40 }}>
-                            <Ionicons name={showpassword ? "eye-off" : "eye"} size={24} color="#bbb" style={{}} />
-                        </TouchableOpacity>
-                    </View>
+                                <TouchableOpacity onPress={() => setShowpassword(!showpassword)} style={{ position: 'absolute', right: 16, top: 40 }}>
+                                    <Ionicons name={showpassword ? "eye-off" : "eye"} size={24} color="#bbb" style={{}} />
+                                </TouchableOpacity>
+                            </View>
 
-                    <TouchableOpacity style={styles.primaryButton} onPress={handleLogin}>
-                        <Text style={styles.primaryButtonText}>{t('login_btn').toUpperCase()}</Text>
-                        <Ionicons name="arrow-forward" size={18} color="#FFF" />
-                    </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={[styles.primaryButton, loading && styles.buttonDisabled]} 
+                                onPress={handleLogin}
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <Text style={styles.primaryButtonText}>LOGGING IN...</Text>
+                                ) : (
+                                    <>
+                                        <Text style={styles.primaryButtonText}>{t('login_btn').toUpperCase()}</Text>
+                                        <Ionicons name="arrow-forward" size={18} color="#FFF" />
+                                    </>
+                                )}
+                            </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/register' as any)}>
-                        <Text style={styles.linkText}>{t('no_account')} <Text style={styles.linkHighlight}>{t('signup_link')}</Text></Text>
-                    </TouchableOpacity>
+                            <TouchableOpacity style={styles.linkButton} onPress={() => router.push('/register' as any)}>
+                                <Text style={styles.linkText}>{t('no_account')} <Text style={styles.linkHighlight}>{t('signup_link')}</Text></Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    ) : (
+                        <Animated.View entering={FadeInDown.delay(200).duration(800)}>
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.label}>OTP Code</Text>
+                                <TextInput
+                                    style={[styles.input, { textAlign: 'center', letterSpacing: 8, fontSize: 24 }]}
+                                    placeholder="000000"
+                                    placeholderTextColor="#DDD"
+                                    keyboardType="number-pad"
+                                    maxLength={6}
+                                    value={otp}
+                                    onChangeText={setOtp}
+                                    autoFocus
+                                />
+                                <Text style={styles.phoneHint}>Code sent to {phone}</Text>
+                            </View>
+
+                            <TouchableOpacity 
+                                style={[styles.primaryButton, loading && styles.buttonDisabled]} 
+                                onPress={handleVerifyOtp}
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <Text style={styles.primaryButtonText}>VERIFYING...</Text>
+                                ) : (
+                                    <Text style={styles.primaryButtonText}>VERIFY & CONTINUE</Text>
+                                )}
+                            </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.linkButton} onPress={handleResendOtp}>
+                                <Text style={styles.linkText}>Resend Code</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.linkButton} onPress={() => setStep(1)}>
+                                <Text style={styles.linkText}>Back to Login</Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    )}
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>
@@ -247,5 +360,15 @@ const styles = StyleSheet.create({
     linkHighlight: {
         color: '#000',
         fontFamily: 'PlusJakartaSans_700Bold',
+    },
+    buttonDisabled: {
+        opacity: 0.6,
+    },
+    phoneHint: {
+        fontFamily: 'PlusJakartaSans_500Medium',
+        fontSize: 12,
+        color: '#999',
+        textAlign: 'center',
+        marginTop: 8,
     },
 });

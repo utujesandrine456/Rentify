@@ -35,17 +35,27 @@ export default function Register() {
         }
 
         try{
-            await apiRequest('/auth/register', "POST", {
+            const backendRole = role === 'landlord' ? 'OWNER' : role.toUpperCase();
+            
+            const response = await apiRequest('/auth/register', "POST", {
                 fullName: name,
                 telephone: phone,
                 password: password,
-                role: role.toUpperCase(),
+                role: backendRole,
             });
             
-            console.log("Registration successful");
-            setStep(2);
+            console.log("OTP sent successfully:", response);
+            setStep(2); // Move to OTP verification step
         }catch(error: any){
-            alert(error.message || "Registration failed");
+            const errorMessage = error.message || "Registration failed";
+            console.error("Registration error:", errorMessage);
+            
+            // Show user-friendly error messages
+            if (errorMessage.includes("already exists")) {
+                alert("This phone number is already registered. Please login instead.");
+            } else {
+                alert(errorMessage);
+            }
         }
     }
 
@@ -56,11 +66,14 @@ export default function Register() {
         }
 
         try{
+            // Map frontend role to backend role: 'landlord' -> 'OWNER'
+            const backendRole = role === 'landlord' ? 'OWNER' : role.toUpperCase();
+            
             const response = await apiRequest('/auth/verify-registration', "POST", {
                 fullName: name,           
                 telephone: phone,      
                 password: password,      
-                role: role.toUpperCase(), 
+                role: backendRole, 
                 otp: otp,
             });
 
@@ -76,7 +89,17 @@ export default function Register() {
             console.log('[REGISTER] ✅ User data stored:', { fullName, telephone, userId, role: userRole });
             router.replace(userRole == "TENANT" ? "/tenant" : "/landlord");
         } catch(error: any){
-            alert(error.message || "OTP verification failed");
+            const errorMessage = error.message || "OTP verification failed";
+            console.error("OTP verification error:", errorMessage);
+            
+            // Show user-friendly error messages
+            if (errorMessage.includes("Invalid or expired")) {
+                alert("Invalid or expired OTP code. Please request a new one.");
+            } else if (errorMessage.includes("already exists")) {
+                alert("This phone number is already registered. Please login instead.");
+            } else {
+                alert(errorMessage);
+            }
         }
     };
 
