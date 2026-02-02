@@ -1,26 +1,62 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Linking } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Linking, ActivityIndicator, RefreshControl } from 'react-native';
 import TopBar from '../../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { LandlordService } from '@/context/landlord.service';
+import { logDashboard, logDashboardSuccess, logDashboardError } from '@/utils/monitoring';
+
+interface Tenant {
+    id: string;
+    fullName: string;
+    telephone: string;
+}
 
 export default function Tenants() {
     const [searchText, setSearchText] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [tenants, setTenants] = useState<Tenant[]>([]);
 
-    const tenants = [
-        { id: 1, name: 'Alice M.', property: 'Sunset Apts #4', status: 'PAID', lastPayment: 'Feb 02', phone: '+250780000001' },
-        { id: 2, name: 'John D.', property: 'Kiyovu Villa', status: 'LATE', lastPayment: 'Jan 05', phone: '+250780000002' },
-        { id: 3, name: 'Grace K.', property: 'Sunset Apts #2', status: 'PENDING', lastPayment: 'Jan 30', phone: '+250780000003' },
-    ];
+    useEffect(() => {
+        loadTenants();
+    }, []);
+
+    const loadTenants = async () => {
+        const startTime = Date.now();
+        setLoading(true);
+        
+        try {
+            logDashboard('LANDLORD', 'Loading tenants...');
+            
+            const tenantsData = await LandlordService.getMyTenants();
+            setTenants(Array.isArray(tenantsData) ? tenantsData : []);
+            
+            const duration = Date.now() - startTime;
+            logDashboardSuccess('LANDLORD', 'Tenants loaded', { count: tenantsData.length }, duration);
+        } catch (error: any) {
+            const duration = Date.now() - startTime;
+            logDashboardError('LANDLORD', 'Failed to load tenants', error, duration);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const filteredTenants = tenants.filter(t =>
-        t.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        t.property.toLowerCase().includes(searchText.toLowerCase())
+        t.fullName?.toLowerCase().includes(searchText.toLowerCase()) ||
+        t.telephone?.includes(searchText)
     );
 
     const handleCall = (phone: string) => {
         Linking.openURL(`tel:${phone}`);
     };
+
+    if (loading && tenants.length === 0) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color="#000" />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -37,41 +73,47 @@ export default function Tenants() {
                 />
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                {filteredTenants.map((tenant, index) => (
-                    <Animated.View
-                        key={tenant.id}
-                        entering={FadeInDown.delay(index * 100).duration(600)}
-                        style={styles.card}
-                    >
-                        <View style={styles.row}>
-                            <View style={styles.avatar}>
-                                <Text style={styles.avatarText}>{tenant.name.charAt(0)}</Text>
+            <ScrollView 
+                contentContainerStyle={styles.scrollContent}
+                refreshControl={
+                    <RefreshControl refreshing={loading} onRefresh={loadTenants} />
+                }
+            >
+                {filteredTenants.length === 0 ? (
+                    <View style={styles.emptyContainer}>
+                        <Ionicons name="people-outline" size={48} color="#CCC" />
+                        <Text style={styles.emptyText}>No tenants found</Text>
+                    </View>
+                ) : (
+                    filteredTenants.map((tenant, index) => (
+                        <Animated.View
+                            key={tenant.id || tenant.telephone}
+                            entering={FadeInDown.delay(index * 100).duration(600)}
+                            style={styles.card}
+                        >
+                            <View style={styles.row}>
+                                <View style={styles.avatar}>
+                                    <Text style={styles.avatarText}>{(tenant.fullName || 'T').charAt(0).toUpperCase()}</Text>
+                                </View>
+                                <View style={styles.info}>
+                                    <Text style={styles.name}>{tenant.fullName || 'Unknown'}</Text>
+                                    <Text style={styles.prop}>{tenant.telephone || 'No phone'}</Text>
+                                </View>
                             </View>
-                            <View style={styles.info}>
-                                <Text style={styles.name}>{tenant.name}</Text>
-                                <Text style={styles.prop}>{tenant.property}</Text>
+                            <View style={styles.divider} />
+                            <View style={styles.footer}>
+                                <Text style={styles.lastPaymentLabel}>Phone: {tenant.telephone || 'N/A'}</Text>
+                                <TouchableOpacity
+                                    style={styles.callButton}
+                                    onPress={() => handleCall(tenant.telephone)}
+                                >
+                                    <Ionicons name="call" size={16} color="#FFF" />
+                                    <Text style={styles.callButtonText}>Call</Text>
+                                </TouchableOpacity>
                             </View>
-                            <View style={[styles.statusBadge,
-                            tenant.status === 'PAID' ? styles.statusPaid :
-                                tenant.status === 'LATE' ? styles.statusLate : styles.statusPending
-                            ]}>
-                                <Text style={styles.statusText}>{tenant.status}</Text>
-                            </View>
-                        </View>
-                        <View style={styles.divider} />
-                        <View style={styles.footer}>
-                            <Text style={styles.lastPaymentLabel}>Last Payment: {tenant.lastPayment}</Text>
-                            <TouchableOpacity
-                                style={styles.callButton}
-                                onPress={() => handleCall(tenant.phone)}
-                            >
-                                <Ionicons name="call" size={16} color="#FFF" />
-                                <Text style={styles.callButtonText}>Call</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </Animated.View>
-                ))}
+                        </Animated.View>
+                    ))
+                )}
             </ScrollView>
         </View>
     );
@@ -160,5 +202,16 @@ const styles = StyleSheet.create({
         fontFamily: 'PlusJakartaSans_700Bold',
         fontSize: 13,
         color: '#FFF',
-    }
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 60,
+        gap: 12,
+    },
+    emptyText: {
+        fontFamily: 'PlusJakartaSans_500Medium',
+        fontSize: 16,
+        color: '#94A3B8',
+    },
 });
