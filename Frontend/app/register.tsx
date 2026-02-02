@@ -6,7 +6,7 @@ import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../context/LanguageContext';
 import { apiRequest } from '@/utils/api';
-import AsyncStorage from '@react-native-async-storage/async-storage/lib/typescript/AsyncStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export default function Register() {
@@ -35,7 +35,7 @@ export default function Register() {
         }
 
         try{
-            await apiRequest('/api/v1/auth/register', "POST", {
+            await apiRequest('/auth/register', "POST", {
                 fullName: name,
                 telephone: phone,
                 password: password,
@@ -56,7 +56,7 @@ export default function Register() {
         }
 
         try{
-            const response = await apiRequest('/api/v1/auth/verify-registration', "POST", {
+            const response = await apiRequest('/auth/verify-registration', "POST", {
                 fullName: name,           
                 telephone: phone,      
                 password: password,      
@@ -64,11 +64,16 @@ export default function Register() {
                 otp: otp,
             });
 
-            const { token, role: userRole } = response;
+            const { token, role: userRole, userId, fullName, telephone } = response;
 
+            // Store all user data
             await AsyncStorage.setItem("token", token);
             await AsyncStorage.setItem("role", userRole);
+            if (userId) await AsyncStorage.setItem("userId", userId.toString());
+            if (fullName) await AsyncStorage.setItem("fullName", fullName);
+            if (telephone) await AsyncStorage.setItem("telephone", telephone);
         
+            console.log('[REGISTER] ✅ User data stored:', { fullName, telephone, userId, role: userRole });
             router.replace(userRole == "TENANT" ? "/tenant" : "/landlord");
         } catch(error: any){
             alert(error.message || "OTP verification failed");
