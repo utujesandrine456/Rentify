@@ -1,45 +1,180 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, TextInput, Alert } from 'react-native';
 import TopBar from '../../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useLanguage } from '../../context/LanguageContext';
+import { apiRequest } from '@/utils/api';
+import { TenantService } from '@/utils/tenant.service';
+import { logDashboard, logDashboardSuccess, logDashboardError } from '@/utils/monitoring';
 
 export default function PayRent() {
     const router = useRouter();
-    const { balance, totalPaid: totalPaidParam, isPartialPayment } = useLocalSearchParams();
+    const { balance, rentalId, isPartialPayment } = useLocalSearchParams();
     const { t } = useLanguage();
 
-    // Total rent is 150k. Remaining is either full or balance.
-    const initialAmount = balance ? balance.toString() : '150000';
-    const prevPaid = parseInt(totalPaidParam as string || '0');
+    const initialAmount = balance ? balance.toString() : '0';
     const isReturningForBalance = isPartialPayment === 'true';
+    const rentalIdParam = rentalId as string;
 
+    const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
     const [success, setSuccess] = useState(false);
     const [paymentType, setPaymentType] = useState<'full' | 'partial'>('full');
     const [customAmount, setCustomAmount] = useState(initialAmount);
     const [paidAmount, setPaidAmount] = useState('');
+    const [paymentId, setPaymentId] = useState('');
+    const [rentalData, setRentalData] = useState<any>(null);
+    const [actualPayments, setActualPayments] = useState<any[]>([]);
+    const [calculatedBalance, setCalculatedBalance] = useState(0);
 
-    const handlePayment = () => {
-        setProcessing(true);
-        const amount = paymentType === 'full' ? initialAmount : customAmount;
-        setPaidAmount(amount);
+    useEffect(() => {
+        if (rentalIdParam) {
+            loadRentalData();
+        } else {
+            loadRentalData();
+        }
+    }, [rentalIdParam]);
 
-        const totalNowPaid = prevPaid + parseInt(amount);
+    const loadRentalData = async () => {
+        const startTime = Date.now();
+        setLoading(true);
+        
+        try {
+            logDashboard('TENANT', 'Loading rental and payment data for payment page...');
+            
+            // Load rentals and payments
+            const [rentalsData, paymentsData] = await Promise.all([
+                TenantService.getMyRentals(),
+                TenantService.getPayments()
+            ]);
 
-        setTimeout(() => {
-            setProcessing(false);
-            setSuccess(true);
-            setTotalPaid(totalNowPaid);
-        }, 2000);
+            // Find the rental
+            let rental = null;
+            if (rentalIdParam) {
+                rental = rentalsData.find((r: any) => 
+                    r.rentalId === rentalIdParam || 
+                    r.rentalId?.toString() === rentalIdParam ||
+                    r.propertyId === rentalIdParam
+                );
+            } else if (rentalsData.length > 0) {
+                // Get first active rental if no ID provided
+                rental = rentalsData.find((r: any) => r.active) || rentalsData[0];
+            }
+
+            if (rental) {
+                setRentalData(rental);
+                
+                // Get payments for this rental
+                const rentalPayments = paymentsData.filter((p: any) => 
+                    p.rentalId === rental.rentalId || 
+                    p.rentalId?.toString() === rental.rentalId?.toString()
+                );
+
+                setActualPayments(rentalPayments);
+
+                // Calculate actual balance from real payments
+                const now = new Date();
+                const currentMonthPayments = rentalPayments.filter((p: any) => {
+                    if (!p.paidDate || p.status !== 'COMPLETED') return false;
+                    const paidDate = new Date(p.paidDate);
+                    return paidDate.getMonth() === now.getMonth() && 
+                           paidDate.getFullYear() === now.getFullYear();
+                });
+
+                const totalPaid = currentMonthPayments.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+                const rentAmount = rental.rentAmount || 0;
+                const actualBalance = rentAmount - totalPaid;
+
+                setCalculatedBalance(actualBalance);
+                
+                // Update custom amount if balance changed
+                if (actualBalance > 0 && actualBalance !== parseFloat(initialAmount)) {
+                    setCustomAmount(actualBalance.toString());
+                }
+
+                const duration = Date.now() - startTime;
+                logDashboardSuccess('TENANT', 'Payment data loaded', {
+                    rentalId: rental.rentalId,
+                    rentAmount,
+                    totalPaid,
+                    actualBalance,
+                    paymentsCount: rentalPayments.length
+                }, duration);
+            } else {
+                logDashboardError('TENANT', 'No rental found', new Error('Rental not found'), Date.now() - startTime);
+            }
+        } catch (error: any) {
+            const duration = Date.now() - startTime;
+            logDashboardError('TENANT', 'Failed to load rental data', error, duration);
+            console.error('Failed to load rental data:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const [totalPaid, setTotalPaid] = useState(0);
+    const handlePayment = async (method: 'MOBILE_MONEY_MTN' | 'MOBILE_MONEY_AIRTEL') => {
+        if (!rentalData || !rentalData.rentalId) {
+            Alert.alert('Error', 'Rental information is missing. Please try again.');
+            await loadRentalData();
+            return;
+        }
+
+        const actualBalance = calculatedBalance > 0 ? calculatedBalance : parseFloat(initialAmount);
+        
+        if (actualBalance <= 0) {
+            Alert.alert('Already Paid', 'You have no outstanding balance for this rental.');
+            return;
+        }
+
+        setProcessing(true);
+        const amount = paymentType === 'full' ? actualBalance : parseFloat(customAmount);
+        
+        if (amount <= 0 || amount > actualBalance) {
+            Alert.alert('Invalid Amount', `Please enter an amount between 1 and ${actualBalance.toLocaleString()} Frw`);
+            setProcessing(false);
+            return;
+        }
+
+        setPaidAmount(amount.toString());
+
+        const startTime = Date.now();
+
+        try {
+            logDashboard('TENANT', `Processing payment: ${method}`, { 
+                amount, 
+                rentalId: rentalData.rentalId,
+                rentalAmount: rentalData.rentAmount,
+                currentBalance: actualBalance
+            });
+
+            const response = await apiRequest('/payments/simulate', 'POST', {
+                rentalId: rentalData.rentalId,
+                amount: amount,
+                paymentMethod: method
+            });
+
+            const duration = Date.now() - startTime;
+            logDashboardSuccess('TENANT', 'Payment processed successfully', { 
+                paymentId: response.id || response.paymentId,
+                amount,
+                method,
+                rentalId: rentalData.rentalId
+            }, duration);
+
+            setPaymentId(response.id || response.paymentId || 'TXN-' + Date.now());
+            setProcessing(false);
+            setSuccess(true);
+        } catch (error: any) {
+            const duration = Date.now() - startTime;
+            logDashboardError('TENANT', 'Payment failed', error, duration);
+            setProcessing(false);
+            Alert.alert('Payment Failed', error.message || 'Failed to process payment. Please try again.');
+        }
+    };
 
     if (success) {
-        const isFullyPaid = totalPaid >= 150000;
         return (
             <View style={styles.successContainer}>
                 <Animated.View entering={FadeInDown.springify()} style={styles.successCard}>
@@ -47,10 +182,9 @@ export default function PayRent() {
                         <Ionicons name="checkmark" size={40} color="#FFF" />
                     </View>
                     <Text style={styles.successTitle}>{t('payment_successful')}</Text>
-                    <Text style={styles.statusBadge}>Status: {isFullyPaid ? 'PAID' : 'PARTIAL'}</Text>
-                    <Text style={styles.successText}>You have successfully paid RWF {parseInt(paidAmount).toLocaleString()} for Feb 2026 rent.</Text>
-                    {!isFullyPaid && <Text style={styles.balanceText}>{t('remaining_balance')}: RWF {(150000 - totalPaid).toLocaleString()}</Text>}
-                    <Text style={styles.receiptText}>Receipt ID: #TXN-98234</Text>
+                    <Text style={styles.statusBadge}>Status: COMPLETED</Text>
+                    <Text style={styles.successText}>You have successfully paid RWF {parseInt(paidAmount).toLocaleString()} for {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} rent.</Text>
+                    <Text style={styles.receiptText}>Receipt ID: #{paymentId}</Text>
 
                     <TouchableOpacity
                         style={styles.primaryButton}
@@ -72,7 +206,21 @@ export default function PayRent() {
         );
     }
 
-    if (initialAmount === '0') {
+    // Check if already paid based on actual payments
+    const isAlreadyPaid = calculatedBalance <= 0 && rentalData && actualPayments.length > 0;
+
+    if (loading) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color="#000" />
+                <Text style={{ marginTop: 16, fontFamily: 'PlusJakartaSans_500Medium', color: '#888' }}>
+                    Loading payment information...
+                </Text>
+            </View>
+        );
+    }
+
+    if (isAlreadyPaid && !success) {
         return (
             <View style={styles.container}>
                 <TopBar title={t('all_settled')} showBack onBackPress={() => router.back()} />
@@ -82,7 +230,9 @@ export default function PayRent() {
                             <Ionicons name="checkmark-done-circle" size={40} color="#FFF" />
                         </View>
                         <Text style={styles.successTitle}>{t('all_settled')}</Text>
-                        <Text style={styles.successText}>{t('all_paid_msg')}</Text>
+                        <Text style={styles.successText}>
+                            {t('all_paid_msg')} You have no outstanding balance for {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}.
+                        </Text>
 
                         <TouchableOpacity
                             style={styles.primaryButton}
@@ -113,23 +263,30 @@ export default function PayRent() {
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.billCard}>
                     <Text style={styles.label}>{isReturningForBalance ? t('remaining_balance') : t('total_amount_due')}</Text>
-                    <Text style={styles.amount}>{parseInt(initialAmount).toLocaleString()} Frw</Text>
-                    {isReturningForBalance && (
+                    <Text style={styles.amount}>
+                        {calculatedBalance > 0 ? calculatedBalance.toLocaleString() : parseInt(initialAmount).toLocaleString()} Frw
+                    </Text>
+                    {actualPayments.length > 0 && (
                         <View style={styles.prevPaymentRow}>
-                            <Text style={styles.prevLabel}>{t('previously_paid')}: {prevPaid.toLocaleString()} Frw</Text>
+                            <Text style={styles.prevLabel}>
+                                {t('previously_paid')}: {actualPayments
+                                    .filter((p: any) => p.status === 'COMPLETED')
+                                    .reduce((sum: number, p: any) => sum + (p.amount || 0), 0)
+                                    .toLocaleString()} Frw
+                            </Text>
                         </View>
                     )}
                     <View style={styles.row}>
                         <Text style={styles.rowLabel}>{t('landlord')}</Text>
-                        <Text style={styles.rowValue}>John M.</Text>
+                        <Text style={styles.rowValue}>{rentalData?.ownerName || 'N/A'}</Text>
                     </View>
                     <View style={styles.row}>
                         <Text style={styles.rowLabel}>{t('property')}</Text>
-                        <Text style={styles.rowValue}>Apt 4B</Text>
+                        <Text style={styles.rowValue}>{rentalData?.propertyDescription || 'N/A'}</Text>
                     </View>
                     <View style={styles.row}>
                         <Text style={styles.rowLabel}>{t('month')}</Text>
-                        <Text style={styles.rowValue}>February 2026</Text>
+                        <Text style={styles.rowValue}>{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</Text>
                     </View>
                 </View>
 
@@ -166,7 +323,7 @@ export default function PayRent() {
 
                 <Text style={styles.sectionTitle}>{t('select_payment_method')}</Text>
 
-                <TouchableOpacity style={styles.paymentMethod} onPress={handlePayment} disabled={processing}>
+                <TouchableOpacity style={styles.paymentMethod} onPress={() => handlePayment('MOBILE_MONEY_MTN')} disabled={processing}>
                     <View style={[styles.methodIcon, { backgroundColor: '#FFCC00' }]}>
                         <Text style={styles.mtnText}>MoMo</Text>
                     </View>
@@ -177,7 +334,7 @@ export default function PayRent() {
                     <Ionicons name="chevron-forward" size={24} color="#CCC" />
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.paymentMethod} onPress={handlePayment} disabled={processing}>
+                <TouchableOpacity style={styles.paymentMethod} onPress={() => handlePayment('MOBILE_MONEY_AIRTEL')} disabled={processing}>
                     <View style={[styles.methodIcon, { backgroundColor: '#FF0000' }]}>
                         <Text style={styles.airtelText}>Airtel</Text>
                     </View>
