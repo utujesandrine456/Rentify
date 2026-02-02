@@ -29,4 +29,14 @@ export const LandlordService = {
     const res = await apiRequest(`/owner/search-tenant?phone=${phone}`, "GET");
     return res;
   },
+
+  getNotifications: async () => {
+    const res = await apiRequest("/owner/notifications", "GET");
+    return Array.isArray(res) ? res : [];
+  },
+
+  markNotificationAsRead: async (notId: string) => {
+    const res = await apiRequest(`/owner/notifications/${notId}/read`, "PUT");
+    return res;
+  },
 };  

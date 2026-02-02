@@ -95,7 +95,7 @@ export default function PayRent() {
                 }
 
                 const duration = Date.now() - startTime;
-                logDashboardSuccess('TENANT', 'Payment data loaded', {
+                logDashboardSuccess('TENANT', 'Payment data loaded successfully', {
                     rentalId: rental.rentalId,
                     rentAmount,
                     totalPaid,
@@ -103,7 +103,17 @@ export default function PayRent() {
                     paymentsCount: rentalPayments.length
                 }, duration);
             } else {
-                logDashboardError('TENANT', 'No rental found', new Error('Rental not found'), Date.now() - startTime);
+                // No rental found - this is a valid scenario, not an error
+                const duration = Date.now() - startTime;
+                logDashboard('TENANT', 'No rental found - tenant may not have active rental', {
+                    rentalsCount: rentalsData.length,
+                    rentalIdParam: rentalIdParam || 'none'
+                }, duration);
+                
+                // Set empty state
+                setRentalData(null);
+                setActualPayments([]);
+                setCalculatedBalance(0);
             }
         } catch (error: any) {
             const duration = Date.now() - startTime;
@@ -216,6 +226,39 @@ export default function PayRent() {
                 <Text style={{ marginTop: 16, fontFamily: 'PlusJakartaSans_500Medium', color: '#888' }}>
                     Loading payment information...
                 </Text>
+            </View>
+        );
+    }
+
+    // Handle case when no rental is found - show helpful message instead of error
+    if (!rentalData && !loading) {
+        return (
+            <View style={styles.container}>
+                <TopBar title={t('pay_rent')} showBack onBackPress={() => router.back()} />
+                <View style={[styles.successContainer, { backgroundColor: '#F7F7F7' }]}>
+                    <Animated.View entering={FadeInDown.springify()} style={styles.successCard}>
+                        <View style={[styles.successIcon, { backgroundColor: '#FF9500' }]}>
+                            <Ionicons name="home-outline" size={40} color="#FFF" />
+                        </View>
+                        <Text style={styles.successTitle}>No Active Rental</Text>
+                        <Text style={styles.successText}>
+                            You don't have an active rental at the moment. Please contact your landlord or explore available properties.
+                        </Text>
+
+                        <TouchableOpacity
+                            style={styles.primaryButton}
+                            onPress={() => router.replace('/tenant/explore')}
+                        >
+                            <Text style={styles.primaryButtonText}>Explore Properties</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.secondaryButton}
+                            onPress={() => router.replace('/tenant')}
+                        >
+                            <Text style={styles.secondaryButtonText}>{t('back_home')}</Text>
+                        </TouchableOpacity>
+                    </Animated.View>
+                </View>
             </View>
         );
     }

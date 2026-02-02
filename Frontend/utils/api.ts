@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = "http://192.168.1.100:8080/api/v1";
+const BASE_URL = "http://10.11.73.129:8080/api/v1";
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 
@@ -21,10 +21,23 @@ export async function apiRequest(endpoint: string, method: HttpMethod = "POST", 
         body: body ? JSON.stringify(body) : undefined
     });
 
-    const data = await response.json();
+    const contentType = response.headers.get("content-type");
+    let data;
+    
+    if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+    } else {
+        const text = await response.text();
+        try {
+            data = JSON.parse(text);
+        } catch {
+            data = text;
+        }
+    }
     
     if(!response.ok){
-        throw new Error(data.message || "Something went wrong");
+        const errorMessage = typeof data === 'string' ? data : (data.message || data.error || "Something went wrong");
+        throw new Error(errorMessage);
     }
 
     return data;
