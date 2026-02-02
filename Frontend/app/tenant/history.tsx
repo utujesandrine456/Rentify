@@ -1,29 +1,121 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import TopBar from '../../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useLanguage } from '../../context/LanguageContext';
+import { TenantService } from '@/utils/tenant.service';
+import { logDashboard, logDashboardSuccess, logDashboardError } from '@/utils/monitoring';
+
+interface Payment {
+    paymentId: string;
+    rentalId: string;
+    amount: number;
+    paymentMethod: string;
+    status: string;
+    paidDate: string;
+    ownerName: string;
+    tenantName: string;
+}
 
 export default function PaymentHistory() {
-    const { paidAmount: paidParam } = useLocalSearchParams();
+    const router = useRouter();
     const { t } = useLanguage();
-    const paidAmount = parseInt(paidParam as string || '0');
-    const totalRent = 150000;
-    const balance = totalRent - paidAmount;
+    const [loading, setLoading] = useState(true);
+    const [payments, setPayments] = useState<Payment[]>([]);
 
-    const history = [
-        { id: 1, month: 'February 2026', date: 'Jan 27, 2026', total: totalRent, paid: paidAmount, balance: balance, status: paidAmount >= totalRent ? 'PAID' : paidAmount > 0 ? 'PARTIAL' : 'PENDING' },
-        { id: 2, month: 'January 2026', date: 'Jan 05, 2026', total: 150000, paid: 150000, balance: 0, status: 'PAID' },
-    ];
+    useEffect(() => {
+        loadPaymentHistory();
+    }, []);
+
+    const loadPaymentHistory = async () => {
+        const startTime = Date.now();
+        setLoading(true);
+        
+        try {
+            logDashboard('TENANT', 'Loading payment history...');
+            
+            const paymentsData = await TenantService.getPayments();
+            setPayments(Array.isArray(paymentsData) ? paymentsData : []);
+            
+            const duration = Date.now() - startTime;
+            logDashboardSuccess('TENANT', 'Payment history loaded', { count: paymentsData.length }, duration);
+        } catch (error: any) {
+            const duration = Date.now() - startTime;
+            logDashboardError('TENANT', 'Failed to load payment history', error, duration);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Group payments by month
+    const groupedPayments = payments.reduce((acc: any, payment: Payment) => {
+        if (!payment.paidDate) return acc;
+        const date = new Date(payment.paidDate);
+        const monthKey = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        
+        if (!acc[monthKey]) {
+            acc[monthKey] = {
+                month: monthKey,
+                date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                payments: [],
+                total: 0,
+                paid: 0
+            };
+        }
+        
+        acc[monthKey].payments.push(payment);
+        acc[monthKey].total += payment.amount || 0;
+        if (payment.status === 'COMPLETED') {
+            acc[monthKey].paid += payment.amount || 0;
+        }
+        
+        return acc;
+    }, {});
+
+    const history = Object.values(groupedPayments).map((group: any) => {
+        // Estimate total rent from first payment (could be improved)
+        const estimatedRent = group.payments[0]?.amount || 0;
+        const totalRent = estimatedRent; // Simplified - in real app, get from rental
+        const balance = totalRent - group.paid;
+        
+        return {
+            id: group.month,
+            month: group.month,
+            date: group.date,
+            total: totalRent,
+            paid: group.paid,
+            balance: balance,
+            status: group.paid >= totalRent ? 'PAID' : group.paid > 0 ? 'PARTIAL' : 'PENDING'
+        };
+    }).reverse(); // Most recent first
+
+    if (loading) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color="#000" />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
             <TopBar title={t('payment_history')} showBack />
 
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                {history.map((item, index) => (
+            <ScrollView 
+                contentContainerStyle={styles.scrollContent}
+                refreshControl={
+                    <RefreshControl refreshing={loading} onRefresh={loadPaymentHistory} />
+                }
+            >
+                {history.length === 0 ? (
+                    <View style={styles.emptyContainer}>
+                        <Ionicons name="receipt-outline" size={48} color="#CCC" />
+                        <Text style={styles.emptyText}>No payment history found</Text>
+                    </View>
+                ) : (
+                    history.map((item, index) => (
                     <Animated.View
                         key={item.id}
                         entering={FadeInDown.delay(index * 100).duration(600)}
@@ -54,7 +146,8 @@ export default function PaymentHistory() {
                             </View>
                         </View>
                     </Animated.View>
-                ))}
+                    ))
+                )}
             </ScrollView>
         </View>
     );
@@ -129,5 +222,16 @@ const styles = StyleSheet.create({
         fontFamily: 'PlusJakartaSans_700Bold',
         fontSize: 14,
         color: '#000',
+    },
+    emptyContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 60,
+        gap: 16,
+    },
+    emptyText: {
+        fontFamily: 'PlusJakartaSans_500Medium',
+        fontSize: 16,
+        color: '#94A3B8',
     },
 });
