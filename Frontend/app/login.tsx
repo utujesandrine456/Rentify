@@ -25,16 +25,21 @@ export default function Login() {
         }
 
         try{
-            const response = await apiRequest('/api/v1/auth/login', "POST", {
+            const response = await apiRequest('/auth/login', "POST", {
                 telephone: phone,
                 password: password
             });
 
-            const {token, role} = response;
+            const {token, role, userId, fullName, telephone} = response;
 
+            // Store all user data
             await AsyncStorage.setItem("token", token);
             await AsyncStorage.setItem("role", role);
+            if (userId) await AsyncStorage.setItem("userId", userId.toString());
+            if (fullName) await AsyncStorage.setItem("fullName", fullName);
+            if (telephone) await AsyncStorage.setItem("telephone", telephone);
 
+            console.log('[LOGIN] ✅ User data stored:', { fullName, telephone, userId, role });
             router.replace(role == "TENANT" ? '/tenant' : '/landlord');
             
         }catch(error: any){
