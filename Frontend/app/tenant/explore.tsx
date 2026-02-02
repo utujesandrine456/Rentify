@@ -1,48 +1,58 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, FlatList, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, FlatList, Dimensions, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import TopBar from '../../components/topbar';
 import { useLanguage } from '../../context/LanguageContext';
+import { TenantService } from '@/utils/tenant.service';
+import { logDashboard, logDashboardSuccess, logDashboardError } from '@/utils/monitoring';
 
-const MOCK_DATA = [
-    {
-        id: '1',
-        type: 'houses',
-        title: 'Modern Villa',
-        location: 'Kigali, Nyarutarama',
-        price: 450000,
-        image: require('../../assets/images/RentifyLanding.jpg'),
-        rating: '4.8',
-    },
-    {
-        id: '2',
-        type: 'houses',
-        title: 'Cozy Apartment',
-        location: 'Kigali, Kacyiru',
-        price: 150000,
-        image: require('../../assets/images/RentifyLanding.jpg'),
-        rating: '4.5',
-    },
-    {
-        id: '4',
-        type: 'houses',
-        title: 'Luxury Penthouse',
-        location: 'Kigali, Kimihurura',
-        price: 850000,
-        image: require('../../assets/images/RentifyLanding.jpg'),
-        rating: '5.0',
-    },
-];
+interface Property {
+    propertyId: string;
+    description: string;
+    location: string;
+    rentAmount: number;
+    bedrooms?: number;
+    bathrooms?: number;
+    status: string;
+    ownerName: string;
+    ownerTelephone: string;
+}
 
 export default function Explore() {
     const router = useRouter();
     const { t } = useLanguage();
 
+    const [loading, setLoading] = useState(true);
+    const [properties, setProperties] = useState<Property[]>([]);
     const [searchText, setSearchText] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [activePriceRange, setActivePriceRange] = useState('all');
+
+    useEffect(() => {
+        loadProperties();
+    }, []);
+
+    const loadProperties = async () => {
+        const startTime = Date.now();
+        setLoading(true);
+        
+        try {
+            logDashboard('TENANT', 'Loading available properties...');
+            
+            const propertiesData = await TenantService.getAvailableProperties();
+            setProperties(Array.isArray(propertiesData) ? propertiesData : []);
+            
+            const duration = Date.now() - startTime;
+            logDashboardSuccess('TENANT', 'Properties loaded', { count: propertiesData.length }, duration);
+        } catch (error: any) {
+            const duration = Date.now() - startTime;
+            logDashboardError('TENANT', 'Failed to load properties', error, duration);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const PRICE_RANGES = [
         { id: 'all', label: t('all_prices') },
@@ -61,42 +71,63 @@ export default function Explore() {
         };
     }, [searchText]);
 
-    const filteredData = MOCK_DATA.filter(item => {
-        const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.location.toLowerCase().includes(searchQuery.toLowerCase());
+    const filteredData = properties.filter(item => {
+        const matchesSearch = item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.location?.toLowerCase().includes(searchQuery.toLowerCase());
 
         let matchesPrice = true;
-        if (activePriceRange === 'low') matchesPrice = item.price < 100000;
-        else if (activePriceRange === 'mid') matchesPrice = item.price >= 100000 && item.price <= 500000;
-        else if (activePriceRange === 'high') matchesPrice = item.price > 500000;
+        const price = item.rentAmount || 0;
+        if (activePriceRange === 'low') matchesPrice = price < 100000;
+        else if (activePriceRange === 'mid') matchesPrice = price >= 100000 && price <= 500000;
+        else if (activePriceRange === 'high') matchesPrice = price > 500000;
 
-        return matchesSearch && matchesPrice;
+        return matchesSearch && matchesPrice && item.status === 'AVAILABLE';
     });
 
-    const renderItem = ({ item }: { item: typeof MOCK_DATA[0] }) => (
+    const renderItem = ({ item }: { item: Property }) => (
         <View style={styles.card}>
             <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => router.push({ pathname: '/tenant/explore/[id]', params: { id: item.id } } as any)}
+                onPress={() => router.push({ pathname: '/tenant/explore/[id]', params: { id: item.propertyId } } as any)}
             >
-                <Image source={item.image} style={styles.cardImage} />
+                <Image 
+                    source={require('../../assets/images/RentifyLanding.jpg')} 
+                    style={styles.cardImage} 
+                />
                 <View style={styles.cardContent}>
                     <View style={styles.cardHeader}>
-                        <Text style={styles.cardTitle}>{item.title}</Text>
-                        <View style={styles.ratingBox}>
-                            <Ionicons name="star" size={12} color="#FFCC00" />
-                            <Text style={styles.ratingText}>{item.rating}</Text>
-                        </View>
+                        <Text style={styles.cardTitle}>{item.description || 'Property'}</Text>
+                        {item.ownerName && (
+                            <View style={styles.ratingBox}>
+                                <Ionicons name="checkmark-circle" size={12} color="#4CD964" />
+                                <Text style={styles.ratingText}>Verified</Text>
+                            </View>
+                        )}
                     </View>
                     <View style={styles.locationRow}>
                         <Ionicons name="location-outline" size={14} color="#888" />
-                        <Text style={styles.cardLocation}>{item.location}</Text>
+                        <Text style={styles.cardLocation}>{item.location || 'Location not specified'}</Text>
                     </View>
+                    {(item.bedrooms || item.bathrooms) && (
+                        <View style={styles.featuresRow}>
+                            {item.bedrooms && (
+                                <View style={styles.feature}>
+                                    <Ionicons name="bed-outline" size={14} color="#888" />
+                                    <Text style={styles.featureText}>{item.bedrooms} Bed</Text>
+                                </View>
+                            )}
+                            {item.bathrooms && (
+                                <View style={styles.feature}>
+                                    <Ionicons name="water-outline" size={14} color="#888" />
+                                    <Text style={styles.featureText}>{item.bathrooms} Bath</Text>
+                                </View>
+                            )}
+                        </View>
+                    )}
                     <View style={styles.priceRow}>
                         <Text style={styles.priceLabel}>{t('price')}</Text>
                         <Text style={styles.priceValue}>
-                            {item.price.toLocaleString()} Frw
-                            {item.type === 'cars' ? ' / day' : ''}
+                            {(item.rentAmount || 0).toLocaleString()} Frw
                         </Text>
                     </View>
                 </View>
@@ -149,19 +180,28 @@ export default function Explore() {
                 </View>
             </View>
 
-            <FlatList
-                data={filteredData}
-                renderItem={renderItem}
-                keyExtractor={item => item.id}
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator={false}
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Ionicons name="search-outline" size={48} color="#EEE" />
-                        <Text style={styles.emptyText}>{t('no_results')}</Text>
-                    </View>
-                }
-            />
+            {loading ? (
+                <View style={[styles.listContent, { justifyContent: 'center', alignItems: 'center', minHeight: 400 }]}>
+                    <ActivityIndicator size="large" color="#000" />
+                </View>
+            ) : (
+                <FlatList
+                    data={filteredData}
+                    renderItem={renderItem}
+                    keyExtractor={item => item.propertyId || item.description}
+                    contentContainerStyle={styles.listContent}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl refreshing={loading} onRefresh={loadProperties} />
+                    }
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Ionicons name="search-outline" size={48} color="#EEE" />
+                            <Text style={styles.emptyText}>{t('no_results')}</Text>
+                        </View>
+                    }
+                />
+            )}
         </View>
     );
 }
@@ -327,5 +367,20 @@ const styles = StyleSheet.create({
         fontFamily: 'PlusJakartaSans_500Medium',
         fontSize: 16,
         color: '#94A3B8',
-    }
+    },
+    featuresRow: {
+        flexDirection: 'row',
+        gap: 16,
+        marginTop: 4,
+    },
+    feature: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    featureText: {
+        fontFamily: 'PlusJakartaSans_500Medium',
+        fontSize: 12,
+        color: '#64748B',
+    },
 });
