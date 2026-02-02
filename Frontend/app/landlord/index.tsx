@@ -1,14 +1,127 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import TopBar from '../../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { useRouter } from 'expo-router';
 import { useLanguage } from '../../context/LanguageContext';
+import { LandlordService } from '@/context/landlord.service';
+import { logDashboard, logDashboardSuccess, logDashboardError } from '@/utils/monitoring';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+interface Payment {
+    paymentId: string;
+    rentalId: string;
+    amount: number;
+    paymentMethod: string;
+    status: string;
+    paidDate: string;
+}
 
 export default function LandlordDashboard() {
     const router = useRouter();
     const { t } = useLanguage();
+    const [loading, setLoading] = useState(true);
+    const [income, setIncome] = useState(0);
+    const [totalTenants, setTotalTenants] = useState(0);
+    const [totalProperties, setTotalProperties] = useState(0);
+    const [pendingTasks, setPendingTasks] = useState(0);
+    const [userName, setUserName] = useState('');
+
+    useEffect(() => {
+        loadDashboardData();
+    }, []);
+
+    // Refresh dashboard when screen comes into focus (e.g., after profile update)
+    useFocusEffect(
+        useCallback(() => {
+            loadDashboardData();
+        }, [])
+    );
+
+    const loadDashboardData = async () => {
+        const startTime = Date.now();
+        setLoading(true);
+        
+        try {
+            logDashboard('LANDLORD', 'Loading dashboard data...');
+            
+            // Load user name - try multiple sources
+            const fullName = await AsyncStorage.getItem('fullName') || '';
+            const storedName = fullName.trim();
+            
+            if (storedName) {
+                setUserName(storedName);
+                logDashboard('LANDLORD', `User name loaded: ${storedName}`);
+            } else {
+                // Fallback: try to get from rental data or use default
+                setUserName('Landlord');
+                logDashboard('LANDLORD', 'User name not found in storage, using default');
+            }
+            
+            // Load all data in parallel
+            const [propertiesData, tenantsData, paymentsData] = await Promise.all([
+                LandlordService.getMyProperties(),
+                LandlordService.getMyTenants(),
+                LandlordService.getPayments()
+            ]);
+
+            const duration = Date.now() - startTime;
+            
+            // Calculate income for current month
+            const now = new Date();
+            const currentMonthPayments = (paymentsData || []).filter((p: Payment) => {
+                if (!p.paidDate || p.status !== 'COMPLETED') return false;
+                const paidDate = new Date(p.paidDate);
+                return paidDate.getMonth() === now.getMonth() && 
+                       paidDate.getFullYear() === now.getFullYear();
+            });
+            
+            const monthlyIncome = currentMonthPayments.reduce((sum: number, p: Payment) => sum + (p.amount || 0), 0);
+            
+            // Count tenants
+            const tenantsCount = Array.isArray(tenantsData) ? tenantsData.length : 0;
+            
+            // Count properties
+            const propertiesCount = Array.isArray(propertiesData) ? propertiesData.length : 0;
+            
+            // Count pending/unpaid payments (simplified - could be enhanced)
+            const pendingPayments = (paymentsData || []).filter((p: Payment) => 
+                p.status !== 'COMPLETED'
+            ).length;
+            
+            setIncome(monthlyIncome);
+            setTotalTenants(tenantsCount);
+            setTotalProperties(propertiesCount);
+            setPendingTasks(pendingPayments);
+            
+            logDashboardSuccess('LANDLORD', 'Dashboard data loaded', {
+                income: monthlyIncome,
+                tenants: tenantsCount,
+                properties: propertiesCount,
+                pending: pendingPayments
+            }, duration);
+            
+        } catch (error: any) {
+            const duration = Date.now() - startTime;
+            logDashboardError('LANDLORD', 'Failed to load dashboard data', error, duration);
+            console.error('Dashboard load error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color="#000" />
+                <Text style={{ marginTop: 16, fontFamily: 'PlusJakartaSans_500Medium', color: '#888' }}>
+                    Loading dashboard...
+                </Text>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -21,9 +134,12 @@ export default function LandlordDashboard() {
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={loading} onRefresh={loadDashboardData} />
+                }
             >
                 <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.header}>
-                    <Text style={styles.greeting}>{t('welcome_name')}, Landlord</Text>
+                    <Text style={styles.greeting}>{t('welcome_name')}, {userName || 'Landlord'}</Text>
                     <Text style={styles.subGreeting}>{t('manage_properties_subtitle')}</Text>
                 </Animated.View>
 
@@ -37,7 +153,9 @@ export default function LandlordDashboard() {
                         </View>
                         <View>
                             <Text style={styles.statLabelLight}>{t('income_this_month')}</Text>
-                            <Text style={styles.statValueLight}>700,000 Frw</Text>
+                            <Text style={styles.statValueLight}>
+                                {income.toLocaleString('en-US')} Frw
+                            </Text>
                         </View>
                         <TouchableOpacity style={styles.statActionLight} onPress={() => { }}>
                             <Text style={styles.statActionTextLight}>{t('view_details')}</Text>
@@ -53,7 +171,7 @@ export default function LandlordDashboard() {
                             <Ionicons name="people" size={20} color="#007AFF" />
                         </View>
                         <Text style={styles.statLabel}>{t('total_tenants')}</Text>
-                        <Text style={styles.statValue}>8 {t('active')}</Text>
+                        <Text style={styles.statValue}>{totalTenants} {t('active')}</Text>
                     </Animated.View>
 
                     <Animated.View
@@ -64,7 +182,7 @@ export default function LandlordDashboard() {
                             <Ionicons name="business" size={20} color="#34C759" />
                         </View>
                         <Text style={styles.statLabel}>{t('properties')}</Text>
-                        <Text style={styles.statValue}>3 {t('units')}</Text>
+                        <Text style={styles.statValue}>{totalProperties} {t('units')}</Text>
                     </Animated.View>
 
                     <Animated.View
@@ -75,7 +193,7 @@ export default function LandlordDashboard() {
                             <Ionicons name="alert-circle" size={20} color="#FF3B30" />
                         </View>
                         <Text style={styles.statLabel}>{t('pending_tasks')}</Text>
-                        <Text style={[styles.statValue, { color: '#FF3B30' }]}>2 {t('unpaid')}</Text>
+                        <Text style={[styles.statValue, { color: '#FF3B30' }]}>{pendingTasks} {t('unpaid')}</Text>
                     </Animated.View>
                 </View>
 
