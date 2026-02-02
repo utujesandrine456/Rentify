@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import TopBar from '../../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '../../context/LanguageContext';
+import { LandlordService } from '@/context/landlord.service';
+import { logDashboard, logDashboardSuccess, logDashboardError } from '@/utils/monitoring';
 
 const { width } = Dimensions.get('window');
 
@@ -14,19 +16,39 @@ export default function LandlordSearch() {
     const router = useRouter();
     const { t } = useLanguage();
 
-    const handleSearch = () => {
-        if (searchQuery.length > 5) {
-            setIsSearching(true);
-            // Simulate API call
-            setTimeout(() => {
-                router.push({
-                    pathname: '/tenant/[id]/public',
-                    params: { id: '1' } // Mock ID
-                } as any);
-                setIsSearching(false);
-            }, 1200);
-        } else {
-            alert(t('valid_phone_msg'));
+    const handleSearch = async () => {
+        if (searchQuery.length < 8) {
+            Alert.alert('Invalid Phone', t('valid_phone_msg'));
+            return;
+        }
+
+        const startTime = Date.now();
+        setIsSearching(true);
+
+        try {
+            logDashboard('LANDLORD', `Searching tenant by phone: ${searchQuery.substring(0, 3)}***`);
+
+            const tenantData = await LandlordService.searchTenantByPhone(searchQuery);
+
+            const duration = Date.now() - startTime;
+            logDashboardSuccess('LANDLORD', 'Tenant found', { name: tenantData.name }, duration);
+
+            router.push({
+                pathname: '/tenant/[id]/public',
+                params: { 
+                    id: tenantData.phone,
+                    name: tenantData.name,
+                    phone: tenantData.phone,
+                    reputation: tenantData.reputationStatus,
+                    location: tenantData.recentRentalLocation
+                }
+            } as any);
+        } catch (error: any) {
+            const duration = Date.now() - startTime;
+            logDashboardError('LANDLORD', 'Tenant search failed', error, duration);
+            Alert.alert('Not Found', error.message || 'Tenant not found with this phone number');
+        } finally {
+            setIsSearching(false);
         }
     };
 
