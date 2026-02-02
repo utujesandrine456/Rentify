@@ -1,25 +1,128 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, ActivityIndicator, RefreshControl } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 import TopBar from '../../components/topbar';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useLanguage } from '../../context/LanguageContext';
+import { TenantService } from '@/utils/tenant.service';
+import { logDashboard, logDashboardSuccess, logDashboardError } from '@/utils/monitoring';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+interface Rental {
+    rentalId: string;
+    propertyId: string;
+    propertyDescription: string;
+    propertyLocation: string;
+    rentAmount: number;
+    dueDay: number;
+    startDate: string;
+    endDate: string;
+    active: boolean;
+    ownerName: string;
+    ownerTelephone: string;
+}
+
+interface Payment {
+    paymentId: string;
+    rentalId: string;
+    amount: number;
+    paymentMethod: string;
+    status: string;
+    paidDate: string;
+}
 
 export default function TenantHome() {
     const router = useRouter();
-    const { paidAmount: paidParam, isLate: lateParam } = useLocalSearchParams();
     const { t } = useLanguage();
+    const [loading, setLoading] = useState(true);
+    const [rental, setRental] = useState<Rental | null>(null);
+    const [payments, setPayments] = useState<Payment[]>([]);
+    const [userName, setUserName] = useState('');
 
-    const totalRent = 150000;
-    const paidAmount = parseInt(paidParam as string || '0');
+    useEffect(() => {
+        loadDashboardData();
+    }, []);
+
+    // Refresh dashboard when screen comes into focus (e.g., after profile update)
+    useFocusEffect(
+        useCallback(() => {
+            loadDashboardData();
+        }, [])
+    );
+
+    const loadDashboardData = async () => {
+        const startTime = Date.now();
+        setLoading(true);
+        
+        try {
+            logDashboard('TENANT', 'Loading dashboard data...');
+            
+            // Load user name - try multiple sources
+            const fullName = await AsyncStorage.getItem('fullName') || '';
+            const storedName = fullName.trim();
+            
+            if (storedName) {
+                setUserName(storedName);
+                logDashboard('TENANT', `User name loaded: ${storedName}`);
+            } else {
+                // Fallback: try to get from rental data or use default
+                setUserName('Tenant');
+                logDashboard('TENANT', 'User name not found in storage, using default');
+            }
+            
+            // Load rentals and payments in parallel
+            const [rentalsData, paymentsData] = await Promise.all([
+                TenantService.getMyRentals(),
+                TenantService.getPayments()
+            ]);
+
+            const duration = Date.now() - startTime;
+            
+            // Get active rental (first active rental)
+            const activeRental = Array.isArray(rentalsData) && rentalsData.length > 0 
+                ? rentalsData.find((r: Rental) => r.active) || rentalsData[0]
+                : null;
+            
+            setRental(activeRental);
+            setPayments(Array.isArray(paymentsData) ? paymentsData : []);
+            
+            logDashboardSuccess('TENANT', 'Dashboard data loaded', {
+                hasRental: !!activeRental,
+                paymentsCount: paymentsData.length
+            }, duration);
+            
+        } catch (error: any) {
+            const duration = Date.now() - startTime;
+            logDashboardError('TENANT', 'Failed to load dashboard data', error, duration);
+            console.error('Dashboard load error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const totalRent = rental?.rentAmount || 0;
+    const currentMonthPayments = payments.filter((p: Payment) => {
+        if (!p.paidDate) return false;
+        const paidDate = new Date(p.paidDate);
+        const now = new Date();
+        return paidDate.getMonth() === now.getMonth() && 
+               paidDate.getFullYear() === now.getFullYear() &&
+               p.status === 'COMPLETED';
+    });
+    
+    const paidAmount = currentMonthPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
     const remainingBalance = totalRent - paidAmount;
-    const isLate = lateParam === 'true';
+    
+    const now = new Date();
+    const dueDay = rental?.dueDay || 1;
+    const isLate = now.getDate() > dueDay && remainingBalance > 0;
 
     let status: 'PENDING' | 'PARTIAL' | 'PAID' | 'RESTRICTED' = 'PENDING';
-    if (paidAmount >= totalRent) status = 'PAID';
+    if (paidAmount >= totalRent && totalRent > 0) status = 'PAID';
     else if (paidAmount > 0) status = 'PARTIAL';
 
     if (isLate && status !== 'PAID') status = 'RESTRICTED';
@@ -27,7 +130,18 @@ export default function TenantHome() {
     const isPaid = status === 'PAID';
     const isRestricted = status === 'RESTRICTED';
     const isPartial = status === 'PARTIAL';
-    const progress = (paidAmount / totalRent);
+    const progress = totalRent > 0 ? (paidAmount / totalRent) : 0;
+
+    if (loading) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color="#000" />
+                <Text style={{ marginTop: 16, fontFamily: 'PlusJakartaSans_500Medium', color: '#888' }}>
+                    Loading dashboard...
+                </Text>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -40,11 +154,14 @@ export default function TenantHome() {
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={loading} onRefresh={loadDashboardData} />
+                }
             >
                 <Animated.View entering={FadeInDown.delay(100).duration(800)} style={styles.greetingHeader}>
-                    <Text style={styles.greetingText}>{t('welcome')}, Tony</Text>
+                    <Text style={styles.greetingText}>{t('welcome')}, {userName || 'Tenant'}</Text>
                     <Text style={styles.subGreeting}>
-                        {isPaid ? "You're all set for this month!" : isRestricted ? "Access restricted. Please clear balance." : "Everything is looking good today."}
+                        {isPaid ? "You're all set for this month!" : isRestricted ? "Access restricted. Please clear balance." : rental ? "Everything is looking good today." : "No active rental found."}
                     </Text>
                 </Animated.View>
 
@@ -72,7 +189,13 @@ export default function TenantHome() {
                         </View>
                         <Text style={styles.amountText}>RWF {remainingBalance.toLocaleString()}</Text>
                         <Text style={[styles.dateText, isPaid ? { color: '#4CD964' } : isRestricted ? { color: '#FF3B30' } : { color: '#FF9500' }]}>
-                            {isPaid ? 'Paid on Jan 27, 2026' : isRestricted ? 'OVERDUE - Access Limited' : 'Due on Feb 01, 2026'}
+                            {isPaid && payments.length > 0 
+                                ? `Paid on ${new Date(currentMonthPayments[0].paidDate).toLocaleDateString()}`
+                                : isRestricted 
+                                ? 'OVERDUE - Access Limited' 
+                                : rental && rental.dueDay
+                                ? `Due on ${rental.dueDay} of this month`
+                                : 'No payment due'}
                         </Text>
 
                         {(isPartial || isRestricted) && !isPaid && (
@@ -89,7 +212,7 @@ export default function TenantHome() {
                                     pathname: '/tenant/pay',
                                     params: {
                                         balance: remainingBalance.toString(),
-                                        totalPaid: paidAmount.toString(),
+                                        rentalId: rental?.rentalId || rental?.propertyId || '',
                                         isPartialPayment: (isPartial || isRestricted).toString()
                                     }
                                 } as any)}
@@ -100,6 +223,7 @@ export default function TenantHome() {
                     )}
                 </Animated.View>
 
+                {rental ? (
                 <Animated.View entering={FadeInDown.delay(400).duration(800)} style={styles.propertySection}>
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>{t('active_residence')}</Text>
@@ -121,16 +245,33 @@ export default function TenantHome() {
                         </View>
                         <View style={styles.propertyOverlay}>
                             <View style={styles.propertyMeta}>
-                                <Text style={styles.propertyTitle}>Luxury Apartment 4B</Text>
+                                    <Text style={styles.propertyTitle}>
+                                        {rental.propertyDescription || 'Property'}
+                                    </Text>
                                 <View style={styles.locationRow}>
                                     <Ionicons name="location" size={14} color="rgba(255,255,255,0.7)" />
-                                    <Text style={styles.propertyAddress}>Kigali, Kicukiro, Niboye</Text>
+                                        <Text style={styles.propertyAddress}>
+                                            {rental.propertyLocation || 'Location not specified'}
+                                        </Text>
+                                    </View>
                                 </View>
+                                <Ionicons name="chevron-forward" size={24} color="#FFF" />
                             </View>
-                            <Ionicons name="chevron-forward" size={24} color="#FFF" />
+                        </TouchableOpacity>
+                    </Animated.View>
+                ) : (
+                    <Animated.View entering={FadeInDown.delay(400).duration(800)} style={styles.propertySection}>
+                        <View style={[styles.propertyCard, { justifyContent: 'center', alignItems: 'center', padding: 32 }]}>
+                            <Ionicons name="home-outline" size={48} color="#CCC" />
+                            <Text style={{ marginTop: 16, fontFamily: 'PlusJakartaSans_600SemiBold', color: '#888' }}>
+                                No active rental
+                            </Text>
+                            <Text style={{ marginTop: 8, fontFamily: 'PlusJakartaSans_500Medium', color: '#AAA', textAlign: 'center' }}>
+                                You don't have an active rental property yet.
+                            </Text>
                         </View>
-                    </TouchableOpacity>
                 </Animated.View>
+                )}
             </ScrollView>
         </View>
     );
